@@ -157,8 +157,5 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup
 
-      - name: Build
-        run: pnpm ${{ matrix.library }}:js:build
-
       - name: Test
         run: pnpm ${{ matrix.library }}:js:test
