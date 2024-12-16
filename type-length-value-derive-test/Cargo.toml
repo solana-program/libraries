@@ -6,6 +6,7 @@ authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
 license = "Apache-2.0"
 edition = "2021"
+publish = false
 
 [dev-dependencies]
 borsh = "1.5.3"
