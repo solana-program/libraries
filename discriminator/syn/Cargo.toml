@@ -2,8 +2,8 @@
 name = "spl-discriminator-syn"
 version = "0.2.0"
 description = "Token parsing and generating library for the `spl-discriminator` library"
-authors = ["Solana Labs Maintainers <maintainers@solanalabs.com>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+repository = "https://github.com/solana-program/libraries"
 license = "Apache-2.0"
 edition = "2021"
 

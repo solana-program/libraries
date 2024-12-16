@@ -7,18 +7,18 @@
 //! of the seed configurations themselves.
 //!
 //! Sizes are as follows:
-//!     * `Seed::Literal`: 1 + 1 + N
+//!     * `Seed::Literal`: `1 + 1 + N`
 //!         * 1 - Discriminator
 //!         * 1 - Length of literal
 //!         * N - Literal bytes themselves
-//!     * `Seed::InstructionData`: 1 + 1 + 1 = 3
+//!     * `Seed::InstructionData`: `1 + 1 + 1 = 3`
 //!         * 1 - Discriminator
 //!         * 1 - Start index of instruction data
 //!         * 1 - Length of instruction data starting at index
-//!     * `Seed::AccountKey` - 1 + 1 = 2
+//!     * `Seed::AccountKey`: `1 + 1 = 2`
 //!         * 1 - Discriminator
 //!         * 1 - Index of account in accounts list
-//!     * `Seed::AccountData`: 1 + 1 + 1 + 1 = 4
+//!     * `Seed::AccountData`: `1 + 1 + 1 + 1 = 4`
 //!         * 1 - Discriminator
 //!         * 1 - Index of account in accounts list
 //!         * 1 - Start index of account data
@@ -153,7 +153,7 @@ impl Seed {
     }
 
     /// Packs a vector of seed configurations into a 32-byte array,
-    /// filling the rest with 0s. Errors if it overflows.
+    /// filling the rest with zeroes. Errors if it overflows.
     pub fn pack_into_address_config(seeds: &[Self]) -> Result<[u8; 32], ProgramError> {
         let mut packed = [0u8; 32];
         let mut i: usize = 0;
@@ -185,7 +185,7 @@ impl Seed {
     }
 
     /// Unpacks all seed configurations from a 32-byte array.
-    /// Stops when it hits uninitialized data (0s).
+    /// Stops when it hits uninitialized data (zeroes).
     pub fn unpack_address_config(address_config: &[u8; 32]) -> Result<Vec<Self>, ProgramError> {
         let mut seeds = vec![];
         let mut i = 0;

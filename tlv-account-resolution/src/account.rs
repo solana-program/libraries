@@ -1,7 +1,8 @@
-//! Struct for managing extra required account configs, ie. defining accounts
-//! required for your interface program, which can be  `AccountMeta`s - which
-//! have fixed addresses - or PDAs - which have addresses derived from a
-//! collection of seeds
+//! Struct for managing extra required account configurations
+//!
+//! For example, defining accounts required for your interface program, which
+//! can be `AccountMeta`s - which have fixed addresses - or PDAs - which have
+//! addresses derived from a collection of seeds
 
 use {
     crate::{error::AccountResolutionError, pubkey_data::PubkeyData, seeds::Seed},

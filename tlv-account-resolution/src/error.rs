@@ -29,9 +29,9 @@ pub enum AccountResolutionError {
     #[error("Failed to parse `Pubkey` from bytes")]
     InvalidPubkey,
     /// Attempted to deserialize an `AccountMeta` but the underlying type has
-    /// PDA configs rather than a fixed address
+    /// PDA configurations rather than a fixed address
     #[error(
-        "Attempted to deserialize an `AccountMeta` but the underlying type has PDA configs rather \
+        "Attempted to deserialize an `AccountMeta` but the underlying type has PDA configurations rather \
          than a fixed address"
     )]
     AccountTypeNotAccountMeta,

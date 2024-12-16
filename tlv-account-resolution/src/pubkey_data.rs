@@ -82,7 +82,7 @@ impl PubkeyData {
     }
 
     /// Packs a pubkey data configuration into a 32-byte array, filling the
-    /// rest with 0s.
+    /// rest with zeroes.
     pub fn pack_into_address_config(key_data: &Self) -> Result<[u8; 32], ProgramError> {
         let mut packed = [0u8; 32];
         let tlv_size = key_data.tlv_size() as usize;

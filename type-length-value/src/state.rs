@@ -10,7 +10,7 @@ use {
     std::{cmp::Ordering, mem::size_of},
 };
 
-/// Get the current TlvIndices from the current spot
+/// Get the current `TlvIndices` from the current spot
 const fn get_indices_unchecked(type_start: usize, value_repetition_number: usize) -> TlvIndices {
     let length_start = type_start.saturating_add(size_of::<ArrayDiscriminator>());
     let value_start = length_start.saturating_add(size_of::<Length>());
@@ -375,7 +375,7 @@ impl<'data> TlvStateMut<'data> {
     }
 
     /// Packs the default TLV data into the first open slot in the data buffer.
-    /// Handles repetition based on the boolean arg provided:
+    /// Handles repetition based on the Boolean arg provided:
     /// * `true`:   If extension is already found in the buffer, it returns an
     ///   error.
     /// * `false`:  Will add a new entry to the next open slot.
@@ -412,7 +412,7 @@ impl<'data> TlvStateMut<'data> {
         self.pack_variable_len_value_with_repetition::<V>(value, 0)
     }
 
-    /// Allocate the given number of bytes for the given SplDiscriminate
+    /// Allocate the given number of bytes for the given `SplDiscriminate`
     pub fn alloc<V: SplDiscriminate>(
         &mut self,
         length: usize,
@@ -465,7 +465,7 @@ impl<'data> TlvStateMut<'data> {
         Ok(repetition_number)
     }
 
-    /// Reallocate the given number of bytes for the given SplDiscriminate. If
+    /// Reallocate the given number of bytes for the given `SplDiscriminate`. If
     /// the new length is smaller, it will compact the rest of the buffer
     /// and zero out the difference at the end. If it's larger, it will move
     /// the rest of the buffer data and zero out the new data.
@@ -523,7 +523,7 @@ impl<'data> TlvStateMut<'data> {
         Ok(&mut self.data[value_start..new_value_end])
     }
 
-    /// Reallocate the given number of bytes for the given SplDiscriminate,
+    /// Reallocate the given number of bytes for the given `SplDiscriminate`,
     /// where no repeating discriminators are allowed
     pub fn realloc_first<V: SplDiscriminate>(
         &mut self,

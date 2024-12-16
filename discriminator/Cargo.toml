@@ -2,8 +2,8 @@
 name = "spl-discriminator"
 version = "0.4.0"
 description = "Solana Program Library 8-Byte Discriminator Management"
-authors = ["Solana Labs Maintainers <maintainers@solanalabs.com>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+repository = "https://github.com/solana-program/libraries"
 license = "Apache-2.0"
 edition = "2021"
 
@@ -11,11 +11,14 @@ edition = "2021"
 borsh = ["dep:borsh"]
 
 [dependencies]
-borsh = { version = "1", optional = true }
+borsh = { version = "1", optional = true, features = ["derive"] }
 bytemuck = { version = "1.20.0", features = ["derive"] }
 solana-program-error = "2.1.0"
 solana-sha256-hasher = "2.1.0"
 spl-discriminator-derive = { version = "0.2.0", path = "./derive" }
+
+[dev-dependencies]
+spl-discriminator = { path = ".", features = ["borsh"] }
 
 [lib]
 crate-type = ["cdylib", "lib"]
