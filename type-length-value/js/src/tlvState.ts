@@ -9,7 +9,12 @@ export class TlvState {
     private readonly discriminatorSize: number;
     private readonly lengthSize: LengthSize;
 
-    public constructor(buffer: Buffer, discriminatorSize = 2, lengthSize: LengthSize = 2, offset: number = 0) {
+    public constructor(
+        buffer: Buffer,
+        discriminatorSize = 2,
+        lengthSize: LengthSize = 2,
+        offset: number = 0
+    ) {
         this.tlvData = buffer.subarray(offset);
         this.discriminatorSize = discriminatorSize;
         this.lengthSize = lengthSize;
@@ -24,7 +29,11 @@ export class TlvState {
         return this.tlvData;
     }
 
-    private readEntryLength<T>(size: LengthSize, offset: number, constructor: (x: number | bigint) => T): T {
+    private readEntryLength<T>(
+        size: LengthSize,
+        offset: number,
+        constructor: (x: number | bigint) => T
+    ): T {
         switch (size) {
             case 1:
                 return constructor(this.tlvData.readUInt8(offset));
@@ -61,18 +70,30 @@ export class TlvState {
         const entries: Buffer[] = [];
         let offset = 0;
         while (offset < this.tlvData.length) {
-            if (offset + this.discriminatorSize + this.lengthSize > this.tlvData.length) {
+            if (
+                offset + this.discriminatorSize + this.lengthSize >
+                this.tlvData.length
+            ) {
                 throw new TlvInvalidAccountDataError();
             }
-            const type = this.tlvData.subarray(offset, offset + this.discriminatorSize);
+            const type = this.tlvData.subarray(
+                offset,
+                offset + this.discriminatorSize
+            );
             offset += this.discriminatorSize;
-            const entryLength = this.readEntryLength(this.lengthSize, offset, Number);
+            const entryLength = this.readEntryLength(
+                this.lengthSize,
+                offset,
+                Number
+            );
             offset += this.lengthSize;
             if (offset + entryLength > this.tlvData.length) {
                 throw new TlvInvalidAccountDataError();
             }
             if (type.equals(discriminator)) {
-                entries.push(this.tlvData.subarray(offset, offset + entryLength));
+                entries.push(
+                    this.tlvData.subarray(offset, offset + entryLength)
+                );
             }
             if (count > 0 && entries.length >= count) {
                 break;
@@ -91,13 +112,23 @@ export class TlvState {
         const discriminators: Buffer[] = [];
         let offset = 0;
         while (offset < this.tlvData.length) {
-            if (offset + this.discriminatorSize + this.lengthSize > this.tlvData.length) {
+            if (
+                offset + this.discriminatorSize + this.lengthSize >
+                this.tlvData.length
+            ) {
                 throw new TlvInvalidAccountDataError();
             }
-            const type = this.tlvData.subarray(offset, offset + this.discriminatorSize);
+            const type = this.tlvData.subarray(
+                offset,
+                offset + this.discriminatorSize
+            );
             discriminators.push(type);
             offset += this.discriminatorSize;
-            const entryLength = this.readEntryLength(this.lengthSize, offset, Number);
+            const entryLength = this.readEntryLength(
+                this.lengthSize,
+                offset,
+                Number
+            );
             offset += this.lengthSize;
             if (offset + entryLength > this.tlvData.length) {
                 throw new TlvInvalidAccountDataError();

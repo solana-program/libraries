@@ -9,9 +9,11 @@ const testVectors = [
 ];
 
 const testExpectedBytes = await Promise.all(
-    testVectors.map(x =>
-        crypto.subtle.digest('SHA-256', new TextEncoder().encode(x)).then(digest => new Uint8Array(digest)),
-    ),
+    testVectors.map((x) =>
+        crypto.subtle
+            .digest('SHA-256', new TextEncoder().encode(x))
+            .then((digest) => new Uint8Array(digest))
+    )
 );
 
 describe('splDiscrimintor', () => {
@@ -31,8 +33,12 @@ describe('splDiscrimintor', () => {
     });
 
     it('should produce the same bytes as rust library', async () => {
-        const expectedBytes = Buffer.from([105, 37, 101, 197, 75, 251, 102, 26]);
-        const discriminator = await splDiscriminate('spl-transfer-hook-interface:execute');
+        const expectedBytes = Buffer.from([
+            105, 37, 101, 197, 75, 251, 102, 26,
+        ]);
+        const discriminator = await splDiscriminate(
+            'spl-transfer-hook-interface:execute'
+        );
         expect(discriminator).to.deep.equal(expectedBytes);
     });
 });

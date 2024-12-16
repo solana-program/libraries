@@ -5,8 +5,8 @@ on:
   pull_request:
 
 jobs:
-  format_and_lint:
-    name: Format & Lint
+  format_and_lint_rust:
+    name: Format & Lint Rust
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,6 +26,25 @@ jobs:
 
       - name: Lint
         run: pnpm ${{ matrix.library }}:lint
+
+  format_and_lint_js:
+    name: Format & Lint JS
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        library: [type-length-value]
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+
+      - name: Format
+        run: pnpm ${{ matrix.library }}:js:format
+
+      - name: Lint
+        run: pnpm ${{ matrix.library }}:js:lint
 
   audit_rust:
     name: Audit Rust
@@ -106,8 +125,8 @@ jobs:
       - name: Build
         run: pnpm ${{ matrix.library }}:build
 
-  test:
-    name: Test
+  test_rust:
+    name: Test Rust
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -124,3 +143,22 @@ jobs:
 
       - name: Test
         run: pnpm ${{ matrix.library }}:test
+
+  test_js:
+    name: Test JS
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        library: [type-length-value]
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: pnpm ${{ matrix.library }}:js:build
+
+      - name: Test
+        run: pnpm ${{ matrix.library }}:js:test

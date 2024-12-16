@@ -67,11 +67,22 @@ describe('tlvData', () => {
         Buffer.from([1, 2, 3]),
     ]);
 
-    const testRawData = (tlvData: Buffer, discriminatorSize: number, lengthSize: LengthSize) => {
+    const testRawData = (
+        tlvData: Buffer,
+        discriminatorSize: number,
+        lengthSize: LengthSize
+    ) => {
         const tlv = new TlvState(tlvData, discriminatorSize, lengthSize);
         expect(tlv.data).to.be.deep.equal(tlvData);
-        const tlvWithOffset = new TlvState(tlvData, discriminatorSize, lengthSize, discriminatorSize + lengthSize);
-        expect(tlvWithOffset.data).to.be.deep.equal(tlvData.subarray(discriminatorSize + lengthSize));
+        const tlvWithOffset = new TlvState(
+            tlvData,
+            discriminatorSize,
+            lengthSize,
+            discriminatorSize + lengthSize
+        );
+        expect(tlvWithOffset.data).to.be.deep.equal(
+            tlvData.subarray(discriminatorSize + lengthSize)
+        );
     };
 
     it('should get the raw tlv data', () => {
@@ -81,7 +92,11 @@ describe('tlvData', () => {
         testRawData(tlvData4, 8, 4);
     });
 
-    const testIndividualEntries = (tlvData: Buffer, discriminatorSize: number, lengthSize: LengthSize) => {
+    const testIndividualEntries = (
+        tlvData: Buffer,
+        discriminatorSize: number,
+        lengthSize: LengthSize
+    ) => {
         const tlv = new TlvState(tlvData, discriminatorSize, lengthSize);
 
         const type = Buffer.alloc(discriminatorSize);
@@ -102,17 +117,28 @@ describe('tlvData', () => {
         testIndividualEntries(tlvData4, 8, 4);
     });
 
-    const testRepeatingEntries = (tlvData: Buffer, discriminatorSize: number, lengthSize: LengthSize) => {
+    const testRepeatingEntries = (
+        tlvData: Buffer,
+        discriminatorSize: number,
+        lengthSize: LengthSize
+    ) => {
         const tlv = new TlvState(tlvData, discriminatorSize, lengthSize);
 
-        const bufferDiscriminator = tlv.bytesRepeating(Buffer.alloc(discriminatorSize));
+        const bufferDiscriminator = tlv.bytesRepeating(
+            Buffer.alloc(discriminatorSize)
+        );
         expect(bufferDiscriminator).to.have.length(2);
         expect(bufferDiscriminator[0]).to.be.deep.equal(Buffer.from([]));
         expect(bufferDiscriminator[1]).to.be.deep.equal(Buffer.from([1, 2, 3]));
 
-        const bufferDiscriminatorWithCount = tlv.bytesRepeating(Buffer.alloc(discriminatorSize), 1);
+        const bufferDiscriminatorWithCount = tlv.bytesRepeating(
+            Buffer.alloc(discriminatorSize),
+            1
+        );
         expect(bufferDiscriminatorWithCount).to.have.length(1);
-        expect(bufferDiscriminatorWithCount[0]).to.be.deep.equal(Buffer.from([]));
+        expect(bufferDiscriminatorWithCount[0]).to.be.deep.equal(
+            Buffer.from([])
+        );
     };
 
     it('should get the repeating entries', () => {
@@ -122,7 +148,11 @@ describe('tlvData', () => {
         testRepeatingEntries(tlvData4, 8, 4);
     });
 
-    const testDiscriminators = (tlvData: Buffer, discriminatorSize: number, lengthSize: LengthSize) => {
+    const testDiscriminators = (
+        tlvData: Buffer,
+        discriminatorSize: number,
+        lengthSize: LengthSize
+    ) => {
         const tlv = new TlvState(tlvData, discriminatorSize, lengthSize);
         const discriminators = tlv.discriminators();
         expect(discriminators).to.have.length(4);
