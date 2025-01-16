@@ -4,7 +4,7 @@
 //! testing the macro itself.
 
 #[cfg(test)]
-pub mod test {
+pub(crate) mod test {
     use {
         borsh::{BorshDeserialize, BorshSerialize},
         solana_borsh::v1::{get_instance_packed_len, try_from_slice_unchecked},
