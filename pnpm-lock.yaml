@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@codama/renderers-js':
-        specifier: ^1.2.0
-        version: 1.2.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
+        specifier: ^1.2.1
+        version: 1.2.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
       '@codama/renderers-rust':
         specifier: ^1.0.8
         version: 1.0.8(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
@@ -33,20 +33,33 @@ packages:
     resolution: {integrity: sha512-1bixXXDGG3cZYW42o/8jTfvwbRnoSTBa43FZoFldYwWIJAgyLkh2H01Hn+VziBPmMI//2D8HVr+hW9PNvrYOQQ==}
     hasBin: true
 
+  '@codama/errors@1.2.2':
+    resolution: {integrity: sha512-rDydQIVUHSP7PNiO/mYkETxEWz9sjhdlgXrJIUYdgHGuN5JnE8knU+uaI40dPIuaH5o5gwVFlWMrTdVSrsJjGA==}
+    hasBin: true
+
   '@codama/node-types@1.2.1':
     resolution: {integrity: sha512-A7Avrldz+OyDbmnW2gAEf+mWnGxiyqdcC2gmX36rgCsuSRkNOyfTZHUm6MuxQhi5nXYzhNaDPZV2P4nHeIkYcg==}
 
-  '@codama/nodes-from-anchor@1.1.1':
-    resolution: {integrity: sha512-kWtBMm8vBkfadShMWeVphY6Scfv8uwkKmNzrshbfC1v3+DBqul/CtghINrNCLBe3ncCaXluCRc6BzaRSpeSwNA==}
+  '@codama/node-types@1.2.2':
+    resolution: {integrity: sha512-hltTdFh5/Ylg43VyHZe/lddpzOB5lS8LtKHG5BJm4nhTfOdilof1TNQvPhzYEatghdl44L/uWdHK4/2NG/mIcw==}
+
+  '@codama/nodes-from-anchor@1.1.2':
+    resolution: {integrity: sha512-eaEV9HwGbm/dzkaut7fldmDjY+0rrunzsqFrYUUDLwINsAf34MJ7zhk4sUy1ORdFU/hyRGveLtnmTb0F+NKyXQ==}
 
   '@codama/nodes@1.2.1':
     resolution: {integrity: sha512-wLUYPNzTvhdysHAt5hLHbUwpduMIadU0ASOdr/aX43w1hx7u2fVCtymbCHUtpF1w5Pg9R0mm4kMcwuJnjcuPVA==}
 
+  '@codama/nodes@1.2.2':
+    resolution: {integrity: sha512-c6PXceHxoAdmfamg6p1F3nY0Hll5ipWAEipRD5lkwy33tekO+Imw1EjOBf/P6oSSFkUUdrOMAZCsEi8KVKOoXw==}
+
   '@codama/renderers-core@1.0.3':
     resolution: {integrity: sha512-zZ+7eV649Ywmy0o3x0q5JuF2leDplxzp+339wdZJEc/ieRFJIZyV5y0SZ8MRi2qvrij4D/hGkQI5QQ/ctTiY3Q==}
 
-  '@codama/renderers-js@1.2.0':
-    resolution: {integrity: sha512-EVju+LqDwfR9Fl2PZ0sGTbF8FQ8nBTdvyPSSKjKv/eZ9DERlTKwBXlb7i7aXbYg5bT24D4dVYH3bb3MOsMfrag==}
+  '@codama/renderers-core@1.0.4':
+    resolution: {integrity: sha512-TTQadgPhAphmM8XDBq1QenpgKOT6eZmt1NYyyZhOmXoBYI7Ku6KyfHlvlpHKGIEAX1F2VRvO1/QuEqnANZ6bRA==}
+
+  '@codama/renderers-js@1.2.1':
+    resolution: {integrity: sha512-ufsReMwOmM1GStJWMgKuDKHiTfJP2qI1/ZoFS6EY03rplIEpGX8v0wjwBUUSe/OBhvql+MbdSiTV5530BKttKQ==}
 
   '@codama/renderers-rust@1.0.8':
     resolution: {integrity: sha512-9qBA8ZtSMEaVGEF0DL2ps1bHaq49ylOFBz2V0FlKEMBpNWZNRhXYg0k4TnRhnIXDnWKgxzRGKFKSiRrAFZkCew==}
@@ -57,8 +70,14 @@ packages:
   '@codama/visitors-core@1.2.1':
     resolution: {integrity: sha512-L0kKi5xihhCisG2olw4Z7HNVgZYeJdjqEZ0WDoG+WiZq11ip+biDr3rq3Wbiy+erV2j5P6xkQ789Rp8I1zbj0Q==}
 
+  '@codama/visitors-core@1.2.2':
+    resolution: {integrity: sha512-RZc7nbFzQ7TwQau4F9/P6rUlJGzOB2ql6t15vDo4+Si7NysF0pMUraDlwlUfC7zXd+GKgQHK/RzuUMm8ORSY+g==}
+
   '@codama/visitors@1.2.1':
     resolution: {integrity: sha512-bmRc/e+Brsl+P5/p+kOusN6AUuS2tBjk/L31XsMPo/CPcB+NC0c6Zq1b7xbj5rGvXhtSTvcsoVBAtbE+NLt7yg==}
+
+  '@codama/visitors@1.2.2':
+    resolution: {integrity: sha512-Hm7w1e0jj+LN9HMAJ/DNmteIVPoMa/DNDW5LrMujHgURh2eLWgwwGg7i8o97hvTWdjarydDrmvpg1q0rUSi14g==}
 
   '@iarna/toml@2.2.5':
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
@@ -290,13 +309,21 @@ snapshots:
       chalk: 5.4.1
       commander: 13.1.0
 
+  '@codama/errors@1.2.2':
+    dependencies:
+      '@codama/node-types': 1.2.2
+      chalk: 5.4.1
+      commander: 13.1.0
+
   '@codama/node-types@1.2.1': {}
 
-  '@codama/nodes-from-anchor@1.1.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)':
+  '@codama/node-types@1.2.2': {}
+
+  '@codama/nodes-from-anchor@1.1.2(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)':
     dependencies:
-      '@codama/errors': 1.2.1
-      '@codama/nodes': 1.2.1
-      '@codama/visitors': 1.2.1
+      '@codama/errors': 1.2.2
+      '@codama/nodes': 1.2.2
+      '@codama/visitors': 1.2.2
       '@noble/hashes': 1.7.1
       '@solana/codecs': 2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
     transitivePeerDependencies:
@@ -308,19 +335,30 @@ snapshots:
       '@codama/errors': 1.2.1
       '@codama/node-types': 1.2.1
 
+  '@codama/nodes@1.2.2':
+    dependencies:
+      '@codama/errors': 1.2.2
+      '@codama/node-types': 1.2.2
+
   '@codama/renderers-core@1.0.3':
     dependencies:
       '@codama/errors': 1.2.1
       '@codama/nodes': 1.2.1
       '@codama/visitors-core': 1.2.1
 
-  '@codama/renderers-js@1.2.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)':
+  '@codama/renderers-core@1.0.4':
     dependencies:
-      '@codama/errors': 1.2.1
-      '@codama/nodes': 1.2.1
-      '@codama/nodes-from-anchor': 1.1.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
-      '@codama/renderers-core': 1.0.3
-      '@codama/visitors-core': 1.2.1
+      '@codama/errors': 1.2.2
+      '@codama/nodes': 1.2.2
+      '@codama/visitors-core': 1.2.2
+
+  '@codama/renderers-js@1.2.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)':
+    dependencies:
+      '@codama/errors': 1.2.2
+      '@codama/nodes': 1.2.2
+      '@codama/nodes-from-anchor': 1.1.2(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
+      '@codama/renderers-core': 1.0.4
+      '@codama/visitors-core': 1.2.2
       '@solana/codecs-strings': 2.0.0-rc.4(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
       nunjucks: 3.2.4
       prettier: 3.4.2
@@ -354,11 +392,23 @@ snapshots:
       '@codama/nodes': 1.2.1
       json-stable-stringify: 1.2.1
 
+  '@codama/visitors-core@1.2.2':
+    dependencies:
+      '@codama/errors': 1.2.2
+      '@codama/nodes': 1.2.2
+      json-stable-stringify: 1.2.1
+
   '@codama/visitors@1.2.1':
     dependencies:
       '@codama/errors': 1.2.1
       '@codama/nodes': 1.2.1
       '@codama/visitors-core': 1.2.1
+
+  '@codama/visitors@1.2.2':
+    dependencies:
+      '@codama/errors': 1.2.2
+      '@codama/nodes': 1.2.2
+      '@codama/visitors-core': 1.2.2
 
   '@iarna/toml@2.2.5': {}
 
