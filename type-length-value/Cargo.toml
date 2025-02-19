@@ -9,7 +9,7 @@ edition = "2021"
 exclude = ["js/**"]
 
 [features]
-derive = ["dep:spl-type-length-value-derive"]
+derive = ["dep:spl-type-length-value-derive", "solana-program-error/borsh"]
 
 [dependencies]
 bytemuck = { version = "1.22.0", features = ["derive"] }
