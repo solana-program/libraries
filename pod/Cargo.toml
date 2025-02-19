@@ -9,10 +9,10 @@ edition = "2021"
 
 [features]
 serde-traits = ["dep:serde"]
-borsh = ["dep:borsh"]
+borsh = ["dep:borsh", "solana-pubkey/borsh"]
 
 [dependencies]
-borsh = { version = "1.5.5", optional = true }
+borsh = { version = "1.5.5", features = ["derive", "unstable__schema"], optional = true }
 bytemuck = { version = "1.22.0" }
 bytemuck_derive = { version = "1.8.1" }
 num-derive = "0.4"
