@@ -302,7 +302,7 @@ impl<'data> TlvStateBorrowed<'data> {
         Ok(Self { data })
     }
 }
-impl<'a> TlvState for TlvStateBorrowed<'a> {
+impl TlvState for TlvStateBorrowed<'_> {
     fn get_data(&self) -> &[u8] {
         self.data
     }
@@ -533,7 +533,7 @@ impl<'data> TlvStateMut<'data> {
     }
 }
 
-impl<'a> TlvState for TlvStateMut<'a> {
+impl TlvState for TlvStateMut<'_> {
     fn get_data(&self) -> &[u8] {
         self.data
     }
