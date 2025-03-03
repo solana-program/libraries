@@ -137,7 +137,7 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup
         with:
-          rustfmt: true
+          nightly-toolchain: true
           cargo-cache-key: cargo-hack-check
           cargo-cache-fallback-key: cargo-hack
 

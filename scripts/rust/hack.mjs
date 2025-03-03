@@ -1,11 +1,6 @@
 #!/usr/bin/env zx
 import 'zx/globals';
-import {
-  cliArguments,
-  getToolchainArgument,
-  popArgument,
-  workingDirectory,
-} from '../utils.mjs';
+import { cliArguments, getToolchainArgument } from '../utils.mjs';
 
-const toolchain = getToolchainArgument('lint');
+const toolchain = getToolchainArgument('nightly');
 await $`cargo ${toolchain} hack check --all-targets ${cliArguments()}`;

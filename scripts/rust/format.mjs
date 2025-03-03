@@ -12,7 +12,7 @@ const [folder, ...formatArgs] = cliArguments();
 
 const fix = popArgument(formatArgs, '--fix');
 const [cargoArgs, fmtArgs] = partitionArguments(formatArgs, '--');
-const toolchain = getToolchainArgument('format');
+const toolchain = getToolchainArgument('nightly');
 
 const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
 
