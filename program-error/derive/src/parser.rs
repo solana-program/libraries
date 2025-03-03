@@ -12,37 +12,68 @@ use {
 
 /// Possible arguments to the `#[spl_program_error]` attribute
 pub struct SplProgramErrorArgs {
-    /// Whether to hash the error codes using `solana_program::hash`
+    /// Whether to hash the error codes using sha-256
     /// or to use the default error code assigned by `num_traits`.
     pub hash_error_code_start: Option<u32>,
-    /// Crate to use for solana_program
-    pub import: SolanaProgram,
+    /// Crate to use for solana_program_error
+    pub program_error_import: SolanaProgramError,
+    /// Crate to use for solana_decode_error
+    pub decode_error_import: SolanaDecodeError,
 }
 
-/// Struct representing the path to a `solana_program` crate, which may be
-/// renamed or otherwise.
-pub struct SolanaProgram {
+/// Struct representing the path to a `solana_program_error` crate, which may
+/// be renamed or otherwise.
+pub struct SolanaProgramError {
     import: Ident,
     explicit: bool,
 }
-impl quote::ToTokens for SolanaProgram {
+impl quote::ToTokens for SolanaProgramError {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.import.to_tokens(tokens);
     }
 }
-impl SolanaProgram {
+impl SolanaProgramError {
     pub fn wrap(&self, output: TokenStream) -> TokenStream {
         if self.explicit {
             output
         } else {
-            anon_const_trick(output)
+            program_error_anon_const_trick(output)
         }
     }
 }
-impl Default for SolanaProgram {
+impl Default for SolanaProgramError {
     fn default() -> Self {
         Self {
-            import: Ident::new("_solana_program", Span::call_site()),
+            import: Ident::new("_solana_program_error", Span::call_site()),
+            explicit: false,
+        }
+    }
+}
+
+/// Struct representing the path to a `solana_decode_error` crate, which may
+/// be renamed or otherwise.
+pub struct SolanaDecodeError {
+    import: Ident,
+    explicit: bool,
+}
+impl quote::ToTokens for SolanaDecodeError {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.import.to_tokens(tokens);
+    }
+}
+impl SolanaDecodeError {
+    pub fn wrap(&self, output: TokenStream) -> TokenStream {
+        if self.explicit {
+            output
+        } else {
+            decode_error_anon_const_trick(output)
+        }
+    }
+}
+impl Default for SolanaDecodeError {
+    fn default() -> Self {
+        Self {
+            import: Ident::new("_solana_decode_error", Span::call_site()),
             explicit: false,
         }
     }
@@ -51,14 +82,21 @@ impl Default for SolanaProgram {
 impl Parse for SplProgramErrorArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut hash_error_code_start = None;
-        let mut import = None;
+        let mut program_error_import = None;
+        let mut decode_error_import = None;
         while !input.is_empty() {
             match SplProgramErrorArgParser::parse(input)? {
                 SplProgramErrorArgParser::HashErrorCodes { value, .. } => {
                     hash_error_code_start = Some(value.base10_parse::<u32>()?);
                 }
-                SplProgramErrorArgParser::SolanaProgramCrate { value, .. } => {
-                    import = Some(SolanaProgram {
+                SplProgramErrorArgParser::SolanaProgramErrorCrate { value, .. } => {
+                    program_error_import = Some(SolanaProgramError {
+                        import: value.parse()?,
+                        explicit: true,
+                    });
+                }
+                SplProgramErrorArgParser::SolanaDecodeErrorCrate { value, .. } => {
+                    decode_error_import = Some(SolanaDecodeError {
                         import: value.parse()?,
                         explicit: true,
                     });
@@ -67,7 +105,8 @@ impl Parse for SplProgramErrorArgs {
         }
         Ok(Self {
             hash_error_code_start,
-            import: import.unwrap_or(SolanaProgram::default()),
+            program_error_import: program_error_import.unwrap_or(SolanaProgramError::default()),
+            decode_error_import: decode_error_import.unwrap_or(SolanaDecodeError::default()),
         })
     }
 }
@@ -80,7 +119,12 @@ enum SplProgramErrorArgParser {
         value: LitInt,
         _comma: Option<Comma>,
     },
-    SolanaProgramCrate {
+    SolanaProgramErrorCrate {
+        _equals_sign: Token![=],
+        value: LitStr,
+        _comma: Option<Comma>,
+    },
+    SolanaDecodeErrorCrate {
         _equals_sign: Token![=],
         value: LitStr,
         _comma: Option<Comma>,
@@ -101,44 +145,65 @@ impl Parse for SplProgramErrorArgParser {
                     _comma,
                 })
             }
-            "solana_program" => {
+            "solana_program_error" => {
                 let _equals_sign = input.parse::<Token![=]>()?;
                 let value = input.parse::<LitStr>()?;
                 let _comma: Option<Comma> = input.parse().unwrap_or(None);
-                Ok(Self::SolanaProgramCrate {
+                Ok(Self::SolanaProgramErrorCrate {
                     _equals_sign,
                     value,
                     _comma,
                 })
             }
-            _ => Err(input.error("Expected argument 'hash_error_code_start' or 'solana_program'")),
+            "solana_decode_error" => {
+                let _equals_sign = input.parse::<Token![=]>()?;
+                let value = input.parse::<LitStr>()?;
+                let _comma: Option<Comma> = input.parse().unwrap_or(None);
+                Ok(Self::SolanaDecodeErrorCrate {
+                    _equals_sign,
+                    value,
+                    _comma,
+                })
+            }
+            _ => Err(input.error("Expected argument 'hash_error_code_start', 'solana_program_error', or 'solana_decode_error'")),
         }
     }
 }
 
 // Within `exp`, you can bring things into scope with `extern crate`.
 //
-// We don't want to assume that `solana_program::` is in scope - the user may
-// have imported it under a different name, or may have imported it in a
+// We don't want to assume that `solana_program_error::` is in scope - the user
+// may have imported it under a different name, or may have imported it in a
 // non-toplevel module (common when putting impls behind a feature gate).
 //
-// Solution: let's just generate `extern crate solana_program as
-// _solana_program` and then refer to `_solana_program` in the derived code.
-// However, macros are not allowed to produce `extern crate` statements at the
-// toplevel.
+// Solution: let's just generate `extern crate solana_program_error as
+// _solana_program_error` and then refer to `_solana_program_error` in the
+// derived code. However, macros are not allowed to produce `extern crate`
+// statements at the toplevel.
 //
-// Solution: let's generate `mod _impl_foo` and import solana_program within
-// that.  However, now we lose access to private members of the surrounding
-// module.  This is a problem if, for example, we're deriving for a newtype,
-// where the inner type is defined in the same module, but not exported.
+// Solution: let's generate `mod _impl_foo` and import solana_program_error
+// within that. However, now we lose access to private members of the
+// surrounding module. This is a problem if, for example, we're deriving for a
+// newtype, where the inner type is defined in the same module,
+// but not exported.
 //
-// Solution: use the anonymous const trick.  For some reason, `extern crate`
+// Solution: use the anonymous const trick. For some reason, `extern crate`
 // statements are allowed here, but everything from the surrounding module is in
-// scope.  This trick is taken from serde and num_traits.
-fn anon_const_trick(exp: TokenStream) -> TokenStream {
+// scope. This trick is taken from serde and num_traits.
+fn program_error_anon_const_trick(exp: TokenStream) -> TokenStream {
     quote! {
         const _: () = {
-            extern crate solana_program as _solana_program;
+            extern crate solana_program_error as _solana_program_error;
+            #exp
+        };
+    }
+}
+
+// Same thing, but for solana_decode_error
+fn decode_error_anon_const_trick(exp: TokenStream) -> TokenStream {
+    quote! {
+        const _: () = {
+            extern crate solana_decode_error as _solana_decode_error;
             #exp
         };
     }

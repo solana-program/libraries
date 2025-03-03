@@ -23,7 +23,7 @@ use {
     syn::{parse_macro_input, ItemEnum},
 };
 
-/// Derive macro to add `Into<solana_program::program_error::ProgramError>`
+/// Derive macro to add `Into<solana_program_error::ProgramError>`
 /// trait
 #[proc_macro_derive(IntoProgramError)]
 pub fn into_program_error(input: TokenStream) -> TokenStream {
@@ -33,14 +33,14 @@ pub fn into_program_error(input: TokenStream) -> TokenStream {
         .into()
 }
 
-/// Derive macro to add `solana_program::decode_error::DecodeError` trait
+/// Derive macro to add `solana_decode_error::DecodeError` trait
 #[proc_macro_derive(DecodeError)]
 pub fn decode_error(input: TokenStream) -> TokenStream {
     let ItemEnum { ident, .. } = parse_macro_input!(input as ItemEnum);
     MacroType::DecodeError { ident }.generate_tokens().into()
 }
 
-/// Derive macro to add `solana_program::program_error::PrintProgramError` trait
+/// Derive macro to add `solana_program_error::PrintProgramError` trait
 #[proc_macro_derive(PrintProgramError)]
 pub fn print_program_error(input: TokenStream) -> TokenStream {
     let ItemEnum {
@@ -60,9 +60,9 @@ pub fn print_program_error(input: TokenStream) -> TokenStream {
 /// - `PartialEq`
 /// - `thiserror::Error`
 /// - `num_derive::FromPrimitive`
-/// - `Into<solana_program::program_error::ProgramError>`
-/// - `solana_program::decode_error::DecodeError`
-/// - `solana_program::program_error::PrintProgramError`
+/// - `Into<solana_program_error::ProgramError>`
+/// - `solana_decode_error::DecodeError`
+/// - `solana_program_error::PrintProgramError`
 ///
 /// Optionally, you can add `hash_error_code_start: u32` argument to create
 /// a unique `u32` _starting_ error codes from the names of the enum variants.
