@@ -127,6 +127,28 @@ jobs:
       - name: Build
         run: pnpm ${{ matrix.library }}:build
 
+  hack_rust:
+    name: Check Powerset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          rustfmt: true
+          cargo-cache-key: cargo-hack-check
+          cargo-cache-fallback-key: cargo-hack
+
+      - name: Install cargo-hack
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: cargo-hack
+
+      - name: Hack check
+        run: pnpm rust:hack
+
   test_rust:
     name: Test Rust
     runs-on: ubuntu-latest
