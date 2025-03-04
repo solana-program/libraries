@@ -16,7 +16,7 @@ cd(path.join(workingDirectory, folder));
 const packageToml = getCargo(folder).package;
 const oldVersion = packageToml.version;
 const packageName = packageToml.name;
-const tagName = path.basename(folder);
+const tagName = packageName.replace(/spl-/, '');
 
 // Publish the new version, commit the repo change, tag it, and push it all.
 const releaseArgs = dryRun
