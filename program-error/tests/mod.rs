@@ -9,10 +9,8 @@ mod tests {
     use {
         super::*,
         serial_test::serial,
-        solana_program::{
-            decode_error::DecodeError,
-            program_error::{PrintProgramError, ProgramError},
-        },
+        solana_decode_error::DecodeError,
+        solana_program_error::{PrintProgramError, ProgramError},
         std::sync::{Arc, RwLock},
     };
 
@@ -24,7 +22,7 @@ mod tests {
         *EXPECTED_DATA.write().unwrap() = expected_data;
     }
     pub struct SyscallStubs {}
-    impl solana_sdk::program_stubs::SyscallStubs for SyscallStubs {
+    impl solana_sysvar::program_stubs::SyscallStubs for SyscallStubs {
         fn sol_log(&self, message: &str) {
             assert_eq!(
                 message,
@@ -73,7 +71,7 @@ mod tests {
         static ONCE: Once = Once::new();
 
         ONCE.call_once(|| {
-            solana_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
+            solana_sysvar::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
         });
         // `Into<ProgramError>`
         assert_eq!(
@@ -112,7 +110,7 @@ mod tests {
         static ONCE: Once = Once::new();
 
         ONCE.call_once(|| {
-            solana_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
+            solana_sysvar::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
         });
         // `Into<ProgramError>`
         assert_eq!(

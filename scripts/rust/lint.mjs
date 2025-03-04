@@ -21,7 +21,7 @@ const lintArgs = [
 ];
 
 const fix = popArgument(lintArgs, '--fix');
-const toolchain = getToolchainArgument('lint');
+const toolchain = getToolchainArgument('nightly');
 
 const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
 

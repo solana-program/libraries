@@ -32,11 +32,12 @@
     "rust:spellcheck": "cargo spellcheck --code 1",
     "rust:audit": "zx ./scripts/rust/audit.mjs",
     "rust:publish": "zx ./scripts/rust/publish.mjs",
+    "rust:hack": "zx ./scripts/rust/hack.mjs",
     "rust:semver": "cargo semver-checks"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
-    "typescript": "^5.7.3",
+    "typescript": "^5.8.2",
     "zx": "^8.3.2"
   },
   "engines": {

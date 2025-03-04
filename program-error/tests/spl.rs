@@ -42,7 +42,7 @@ fn test_library_error_codes() {
     fn get_error_code_check(hash_input: &str) -> u32 {
         let mut nonce: u32 = 0;
         loop {
-            let hash = solana_program::hash::hashv(&[hash_input.as_bytes(), &nonce.to_le_bytes()]);
+            let hash = solana_sha256_hasher::hashv(&[hash_input.as_bytes(), &nonce.to_le_bytes()]);
             let mut bytes = [0u8; 4];
             bytes.copy_from_slice(&hash.to_bytes()[13..17]);
             let error_code = u32::from_le_bytes(bytes);
@@ -73,9 +73,9 @@ fn test_library_error_codes() {
     );
 }
 
-/// Example error with solana_program crate set
-#[spl_program_error(solana_program = "solana_program")]
-enum ExampleSolanaProgramCrateError {
+/// Example error with solana_program_error crate set
+#[spl_program_error(solana_program_error = "solana_program_error")]
+enum ExampleSolanaProgramError {
     /// This is a very informative error
     #[error("This is a very informative error")]
     VeryInformativeError,
@@ -86,6 +86,23 @@ enum ExampleSolanaProgramCrateError {
 
 /// Tests that all macros compile
 #[test]
-fn test_macros_compile_with_solana_program_crate() {
-    let _ = ExampleSolanaProgramCrateError::VeryInformativeError;
+fn test_macros_compile_with_solana_program_error_crate() {
+    let _ = ExampleSolanaProgramError::VeryInformativeError;
+}
+
+/// Example error with solana_decode_error crate set
+#[spl_program_error(solana_decode_error = "solana_decode_error")]
+enum ExampleSolanaDecodeError {
+    /// This is a very informative error
+    #[error("This is a very informative error")]
+    VeryInformativeError,
+    /// This is a super important error
+    #[error("This is a super important error")]
+    SuperImportantError,
+}
+
+/// Tests that all macros compile
+#[test]
+fn test_macros_compile_with_solana_decode_error_crate() {
+    let _ = ExampleSolanaDecodeError::VeryInformativeError;
 }
