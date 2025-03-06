@@ -33,7 +33,7 @@
     "rust:audit": "zx ./scripts/rust/audit.mjs",
     "rust:publish": "zx ./scripts/rust/publish.mjs",
     "rust:hack": "zx ./scripts/rust/hack.mjs",
-    "rust:semver": "cargo semver-checks"
+    "rust:semver": "zx ./scripts/rust/semver.mjs"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
