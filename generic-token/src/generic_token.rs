@@ -1,13 +1,13 @@
-/// Minimum viable SPL Token Account parser to avoid a dependency on the spl-token and spl-token-2022 crates.
-/// Users may use `GenericTokenAccount` directly, but this requires them to select the correct implementation
-/// based on the account's program id. `generic_token::Account` abstracts over this and requires no knowledge
-/// of the different token programs on the part of the caller at all.
+/// Minimum viable SPL Token parsers to avoid a dependency on the spl-token and spl-token-2022 crates.
+/// Users may use the generic traits directly, but this requires them to select the correct implementation
+/// based on the account's program id. `generic_token::Account` and `generic_token::Mint` abstract over
+/// this and require no knowledge of the different token programs on the part of the caller at all.
 ///
-/// We provide the minimum viable interface to determine balances and ownership. For more advanced usecases,
+/// We provide the minimum viable interface to determine balances and ownership. For more advanced use-cases,
 /// it is recommended to use to full token program crates instead.
 use {
     crate::{
-        token::{self, GenericTokenAccount},
+        token::{self, GenericTokenAccount, GenericTokenMint},
         token_2022,
     },
     solana_pubkey::Pubkey,
@@ -46,5 +46,34 @@ impl Account {
             owner,
             amount,
         })
+    }
+}
+
+pub struct Mint {
+    pub supply: u64,
+    pub decimals: u8,
+}
+
+impl Mint {
+    pub fn unpack(account_data: &[u8], program_id: &Pubkey) -> Option<Self> {
+        let (supply, decimals) = if *program_id == token::id() {
+            token::Mint::valid_account_data(account_data).then_some(())?;
+
+            let supply = token::Mint::unpack_mint_supply_unchecked(account_data);
+            let decimals = token::Mint::unpack_mint_decimals_unchecked(account_data);
+
+            (*supply, *decimals)
+        } else if *program_id == token_2022::id() {
+            token_2022::Mint::valid_account_data(account_data).then_some(())?;
+
+            let supply = token_2022::Mint::unpack_mint_supply_unchecked(account_data);
+            let decimals = token_2022::Mint::unpack_mint_decimals_unchecked(account_data);
+
+            (*supply, *decimals)
+        } else {
+            return None;
+        };
+
+        Some(Self { supply, decimals })
     }
 }
