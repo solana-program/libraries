@@ -1,6 +1,7 @@
 use solana_pubkey::Pubkey;
 
 pub mod associated_token_account;
+pub mod generic_token;
 pub mod token;
 pub mod token_2022;
 
