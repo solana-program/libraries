@@ -27,52 +27,52 @@ const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
 const SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
 const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;
 
+macro_rules! define_checked_getter {
+    ($checked_fn:ident, $unchecked_fn:ident, $typ:ty) => {
+        fn $checked_fn(account_data: &[u8]) -> Option<&$typ> {
+            if Self::valid_account_data(account_data) {
+                Some(Self::$unchecked_fn(account_data))
+            } else {
+                None
+            }
+        }
+    };
+}
+
+// NOTE if future token programs have new offsets, these helpers could be added to the trait
+// for now, no impls need to override any getters, so exposing arbitrary-offset unpacking is useless
+fn unpack_pubkey_unchecked(account_data: &[u8], offset: usize) -> &Pubkey {
+    bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(PUBKEY_BYTES)])
+}
+
+fn unpack_u64_unchecked(account_data: &[u8], offset: usize) -> &u64 {
+    bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
+}
+
+fn unpack_u8_unchecked(account_data: &[u8], offset: usize) -> &u8 {
+    bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u8>())])
+}
+
 pub trait GenericTokenAccount {
     fn valid_account_data(account_data: &[u8]) -> bool;
 
+    define_checked_getter!(unpack_account_mint, unpack_account_mint_unchecked, Pubkey);
+    define_checked_getter!(unpack_account_owner, unpack_account_owner_unchecked, Pubkey);
+    define_checked_getter!(unpack_account_amount, unpack_account_amount_unchecked, u64);
+
     // Call after account length has already been verified
     fn unpack_account_mint_unchecked(account_data: &[u8]) -> &Pubkey {
-        Self::unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_MINT_OFFSET)
+        unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_MINT_OFFSET)
     }
 
     // Call after account length has already been verified
     fn unpack_account_owner_unchecked(account_data: &[u8]) -> &Pubkey {
-        Self::unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_OWNER_OFFSET)
+        unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_OWNER_OFFSET)
     }
 
     // Call after account length has already been verified
     fn unpack_account_amount_unchecked(account_data: &[u8]) -> &u64 {
-        let offset = SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET;
-        bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
-    }
-
-    // Call after account length has already been verified
-    fn unpack_pubkey_unchecked(account_data: &[u8], offset: usize) -> &Pubkey {
-        bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(PUBKEY_BYTES)])
-    }
-
-    fn unpack_account_mint(account_data: &[u8]) -> Option<&Pubkey> {
-        if Self::valid_account_data(account_data) {
-            Some(Self::unpack_account_mint_unchecked(account_data))
-        } else {
-            None
-        }
-    }
-
-    fn unpack_account_owner(account_data: &[u8]) -> Option<&Pubkey> {
-        if Self::valid_account_data(account_data) {
-            Some(Self::unpack_account_owner_unchecked(account_data))
-        } else {
-            None
-        }
-    }
-
-    fn unpack_account_amount(account_data: &[u8]) -> Option<&u64> {
-        if Self::valid_account_data(account_data) {
-            Some(Self::unpack_account_amount_unchecked(account_data))
-        } else {
-            None
-        }
+        unpack_u64_unchecked(account_data, SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET)
     }
 }
 
