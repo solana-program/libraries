@@ -53,6 +53,8 @@ fn unpack_u8_unchecked(account_data: &[u8], offset: usize) -> &u8 {
     bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u8>())])
 }
 
+// Trait for retrieving mint address, owner, and amount from any token account-like buffer.
+// A token program that copies the spl_token layout need only impl `valid_account_data()`.
 pub trait GenericTokenAccount {
     fn valid_account_data(account_data: &[u8]) -> bool;
 
@@ -89,11 +91,56 @@ impl GenericTokenAccount for Account {
     }
 }
 
+/*
+    spl_token::state::Mint {
+        mint_authority: COption<Pubkey>,
+        supply: u64,
+        decimals: u8,
+        is_initialized: bool,
+        freeze_authority: COption<Pubkey>,
+    }
+*/
+const SPL_TOKEN_MINT_SUPPLY_OFFSET: usize = 36;
+const SPL_TOKEN_MINT_DECIMALS_OFFSET: usize = 44;
+const SPL_TOKEN_MINT_LENGTH: usize = 82;
+
+// Trait for retrieving supply and decimals from any token mint-like buffer.
+// A token program that copies the spl_token layout need only impl `valid_account_data()`.
+pub trait GenericTokenMint {
+    fn valid_account_data(account_data: &[u8]) -> bool;
+
+    define_checked_getter!(unpack_mint_supply, unpack_mint_supply_unchecked, u64);
+    define_checked_getter!(unpack_mint_decimals, unpack_mint_decimals_unchecked, u8);
+
+    // Call after account length has already been verified
+    fn unpack_mint_supply_unchecked(account_data: &[u8]) -> &u64 {
+        unpack_u64_unchecked(account_data, SPL_TOKEN_MINT_SUPPLY_OFFSET)
+    }
+
+    // Call after account length has already been verified
+    fn unpack_mint_decimals_unchecked(account_data: &[u8]) -> &u8 {
+        unpack_u8_unchecked(account_data, SPL_TOKEN_MINT_DECIMALS_OFFSET)
+    }
+}
+
+pub struct Mint;
+impl Mint {
+    pub fn get_packed_len() -> usize {
+        SPL_TOKEN_MINT_LENGTH
+    }
+}
+
+impl GenericTokenMint for Mint {
+    fn valid_account_data(account_data: &[u8]) -> bool {
+        account_data.len() == SPL_TOKEN_MINT_LENGTH
+    }
+}
+
 pub mod native_mint {
     solana_pubkey::declare_id!("So11111111111111111111111111111111111111112");
 
     /*
-        Mint {
+        spl_token::state::Mint {
             mint_authority: COption::None,
             supply: 0,
             decimals: 9,
