@@ -6577,6 +6577,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "spl-generic-token"
+version = "0.0.0"
+dependencies = [
+ "bytemuck",
+ "solana-pubkey",
+]
+
+[[package]]
 name = "spl-pod"
 version = "0.5.1"
 dependencies = [

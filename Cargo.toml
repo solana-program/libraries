@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
   "discriminator",
+  "generic-token",
   "pod",
   "program-error",
   "tlv-account-resolution",

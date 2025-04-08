@@ -1,0 +1,18 @@
+[package]
+name = "spl-generic-token"
+version = "0.0.0"
+description = "Solana Program Library Generic Token"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+repository = "https://github.com/solana-program/libraries"
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+bytemuck = "1.22.0"
+solana-pubkey = "2.2.1"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
