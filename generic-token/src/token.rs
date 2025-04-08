@@ -39,13 +39,6 @@ macro_rules! define_checked_getter {
     };
 }
 
-// NOTE if future token programs have new offsets, this helper could be added back to the trait
-// for now, no impls need to override any getters, so exposing arbitrary-offset unpacking is useless
-// XXX FIXME HANA actually i should add this back for compat with spl_token, it copy-pastes this trait
-fn unpack_pubkey_unchecked(account_data: &[u8], offset: usize) -> &Pubkey {
-    bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(PUBKEY_BYTES)])
-}
-
 // Trait for retrieving mint address, owner, and amount from any token account-like buffer.
 // A token program that copies the spl_token layout need only impl `valid_account_data()`.
 pub trait GenericTokenAccount {
@@ -61,18 +54,23 @@ pub trait GenericTokenAccount {
 
     // Call after account length has already been verified
     fn unpack_account_mint_unchecked(account_data: &[u8]) -> &Pubkey {
-        unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_MINT_OFFSET)
+        Self::unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_MINT_OFFSET)
     }
 
     // Call after account length has already been verified
     fn unpack_account_owner_unchecked(account_data: &[u8]) -> &Pubkey {
-        unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_OWNER_OFFSET)
+        Self::unpack_pubkey_unchecked(account_data, SPL_TOKEN_ACCOUNT_OWNER_OFFSET)
     }
 
     // Call after account length has already been verified
     fn unpack_account_amount_unchecked(account_data: &[u8]) -> u64 {
         let offset = SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET;
         *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
+    }
+
+    // Call after account length has already been verified
+    fn unpack_pubkey_unchecked(account_data: &[u8], offset: usize) -> &Pubkey {
+        bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(PUBKEY_BYTES)])
     }
 }
 
