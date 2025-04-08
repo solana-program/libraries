@@ -1,4 +1,4 @@
-/// Partial SPL Token declarations inlined to avoid an external dependency on the spl-token crate
+/// Partial SPL Token declarations to avoid a dependency on the spl-token crate.
 use {
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
     std::mem,
@@ -22,9 +22,9 @@ pub mod program_v3_4_0 {
         close_authority: COption<Pubkey>,
     }
 */
-pub const SPL_TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
-pub const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
-pub const SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
+const SPL_TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
+const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
+const SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
 const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;
 
 pub trait GenericTokenAccount {

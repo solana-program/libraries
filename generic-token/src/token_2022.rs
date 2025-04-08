@@ -1,10 +1,10 @@
-/// Partial SPL Token declarations inlined to avoid an external dependency on the spl-token-2022 crate
+/// Partial SPL Token declarations to avoid a dependency on the spl-token-2022 crate.
 use crate::token::{self, GenericTokenAccount};
 
 solana_pubkey::declare_id!("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
 // `spl_token_program_2022::extension::AccountType::Account` ordinal value
-pub const ACCOUNTTYPE_ACCOUNT: u8 = 2;
+const ACCOUNTTYPE_ACCOUNT: u8 = 2;
 
 pub struct Account;
 impl GenericTokenAccount for Account {
