@@ -39,18 +39,11 @@ macro_rules! define_checked_getter {
     };
 }
 
-// NOTE if future token programs have new offsets, these helpers could be added to the trait
+// NOTE if future token programs have new offsets, this helper could be added back to the trait
 // for now, no impls need to override any getters, so exposing arbitrary-offset unpacking is useless
+// XXX FIXME HANA actually i should add this back for compat with spl_token, it copy-pastes this trait
 fn unpack_pubkey_unchecked(account_data: &[u8], offset: usize) -> &Pubkey {
     bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(PUBKEY_BYTES)])
-}
-
-fn unpack_u64_unchecked(account_data: &[u8], offset: usize) -> u64 {
-    *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
-}
-
-fn unpack_u8_unchecked(account_data: &[u8], offset: usize) -> u8 {
-    *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u8>())])
 }
 
 // Trait for retrieving mint address, owner, and amount from any token account-like buffer.
@@ -78,7 +71,8 @@ pub trait GenericTokenAccount {
 
     // Call after account length has already been verified
     fn unpack_account_amount_unchecked(account_data: &[u8]) -> u64 {
-        unpack_u64_unchecked(account_data, SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET)
+        let offset = SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET;
+        *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
     }
 }
 
@@ -110,6 +104,7 @@ const SPL_TOKEN_MINT_LENGTH: usize = 82;
 
 // Trait for retrieving supply and decimals from any token mint-like buffer.
 // A token program that copies the spl_token layout need only impl `valid_account_data()`.
+// We do not use bytemuck for this because Mint is an unaligned struct.
 pub trait GenericTokenMint {
     fn valid_account_data(account_data: &[u8]) -> bool;
 
@@ -118,12 +113,18 @@ pub trait GenericTokenMint {
 
     // Call after account length has already been verified
     fn unpack_mint_supply_unchecked(account_data: &[u8]) -> u64 {
-        unpack_u64_unchecked(account_data, SPL_TOKEN_MINT_SUPPLY_OFFSET)
+        let mut supply_bytes = [0u8; 8];
+        let offset = SPL_TOKEN_MINT_SUPPLY_OFFSET;
+
+        supply_bytes
+            .copy_from_slice(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())]);
+
+        u64::from_le_bytes(supply_bytes)
     }
 
     // Call after account length has already been verified
     fn unpack_mint_decimals_unchecked(account_data: &[u8]) -> u8 {
-        unpack_u8_unchecked(account_data, SPL_TOKEN_MINT_DECIMALS_OFFSET)
+        account_data[SPL_TOKEN_MINT_DECIMALS_OFFSET]
     }
 }
 
