@@ -12,6 +12,7 @@ on:
           - discriminator
           - discriminator/derive
           - discriminator/syn
+          - generic-token
           - pod
           - program-error
           - program-error/derive
