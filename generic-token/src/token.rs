@@ -29,7 +29,7 @@ const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;
 
 macro_rules! define_checked_getter {
     ($checked_fn:ident, $unchecked_fn:ident, $typ:ty) => {
-        fn $checked_fn(account_data: &[u8]) -> Option<&$typ> {
+        fn $checked_fn(account_data: &[u8]) -> Option<$typ> {
             if Self::valid_account_data(account_data) {
                 Some(Self::$unchecked_fn(account_data))
             } else {
@@ -45,12 +45,12 @@ fn unpack_pubkey_unchecked(account_data: &[u8], offset: usize) -> &Pubkey {
     bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(PUBKEY_BYTES)])
 }
 
-fn unpack_u64_unchecked(account_data: &[u8], offset: usize) -> &u64 {
-    bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
+fn unpack_u64_unchecked(account_data: &[u8], offset: usize) -> u64 {
+    *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
 }
 
-fn unpack_u8_unchecked(account_data: &[u8], offset: usize) -> &u8 {
-    bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u8>())])
+fn unpack_u8_unchecked(account_data: &[u8], offset: usize) -> u8 {
+    *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u8>())])
 }
 
 // Trait for retrieving mint address, owner, and amount from any token account-like buffer.
@@ -58,8 +58,12 @@ fn unpack_u8_unchecked(account_data: &[u8], offset: usize) -> &u8 {
 pub trait GenericTokenAccount {
     fn valid_account_data(account_data: &[u8]) -> bool;
 
-    define_checked_getter!(unpack_account_mint, unpack_account_mint_unchecked, Pubkey);
-    define_checked_getter!(unpack_account_owner, unpack_account_owner_unchecked, Pubkey);
+    define_checked_getter!(unpack_account_mint, unpack_account_mint_unchecked, &Pubkey);
+    define_checked_getter!(
+        unpack_account_owner,
+        unpack_account_owner_unchecked,
+        &Pubkey
+    );
     define_checked_getter!(unpack_account_amount, unpack_account_amount_unchecked, u64);
 
     // Call after account length has already been verified
@@ -73,7 +77,7 @@ pub trait GenericTokenAccount {
     }
 
     // Call after account length has already been verified
-    fn unpack_account_amount_unchecked(account_data: &[u8]) -> &u64 {
+    fn unpack_account_amount_unchecked(account_data: &[u8]) -> u64 {
         unpack_u64_unchecked(account_data, SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET)
     }
 }
@@ -113,12 +117,12 @@ pub trait GenericTokenMint {
     define_checked_getter!(unpack_mint_decimals, unpack_mint_decimals_unchecked, u8);
 
     // Call after account length has already been verified
-    fn unpack_mint_supply_unchecked(account_data: &[u8]) -> &u64 {
+    fn unpack_mint_supply_unchecked(account_data: &[u8]) -> u64 {
         unpack_u64_unchecked(account_data, SPL_TOKEN_MINT_SUPPLY_OFFSET)
     }
 
     // Call after account length has already been verified
-    fn unpack_mint_decimals_unchecked(account_data: &[u8]) -> &u8 {
+    fn unpack_mint_decimals_unchecked(account_data: &[u8]) -> u8 {
         unpack_u8_unchecked(account_data, SPL_TOKEN_MINT_DECIMALS_OFFSET)
     }
 }

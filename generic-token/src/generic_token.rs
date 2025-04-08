@@ -29,7 +29,7 @@ impl Account {
             let owner = token::Account::unpack_account_owner_unchecked(account_data);
             let amount = token::Account::unpack_account_amount_unchecked(account_data);
 
-            (*mint, *owner, *amount)
+            (*mint, *owner, amount)
         } else if *program_id == token_2022::id() {
             token_2022::Account::valid_account_data(account_data).then_some(())?;
 
@@ -37,7 +37,7 @@ impl Account {
             let owner = token_2022::Account::unpack_account_owner_unchecked(account_data);
             let amount = token_2022::Account::unpack_account_amount_unchecked(account_data);
 
-            (*mint, *owner, *amount)
+            (*mint, *owner, amount)
         } else {
             return None;
         };
@@ -64,14 +64,14 @@ impl Mint {
             let supply = token::Mint::unpack_mint_supply_unchecked(account_data);
             let decimals = token::Mint::unpack_mint_decimals_unchecked(account_data);
 
-            (*supply, *decimals)
+            (supply, decimals)
         } else if *program_id == token_2022::id() {
             token_2022::Mint::valid_account_data(account_data).then_some(())?;
 
             let supply = token_2022::Mint::unpack_mint_supply_unchecked(account_data);
             let decimals = token_2022::Mint::unpack_mint_decimals_unchecked(account_data);
 
-            (*supply, *decimals)
+            (supply, decimals)
         } else {
             return None;
         };
