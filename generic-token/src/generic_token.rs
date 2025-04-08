@@ -13,6 +13,7 @@ use {
     solana_pubkey::Pubkey,
 };
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Account {
     pub mint: Pubkey,
     pub owner: Pubkey,
@@ -49,6 +50,7 @@ impl Account {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Mint {
     pub supply: u64,
     pub decimals: u8,
