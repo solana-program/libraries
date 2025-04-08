@@ -3,6 +3,7 @@ resolver = "2"
 members = [
   "discriminator",
   "generic-token",
+  "generic-token-tests",
   "pod",
   "program-error",
   "tlv-account-resolution",

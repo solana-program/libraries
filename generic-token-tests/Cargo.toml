@@ -1,0 +1,24 @@
+# this package prevents a (future) circular dependency between spl_generic_token and spl_token
+# it also makes it convenient for us to use `solana_pubkey::new_rand()`
+
+[package]
+name = "spl-generic-token-tests"
+publish = false
+version = "0.0.0"
+description = "Solana Program Library Generic Token Tests"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+repository = "https://github.com/solana-program/libraries"
+license = "Apache-2.0"
+edition = "2021"
+
+[dev-dependencies]
+rand = "0.8.0"
+spl-generic-token = { path = "../generic-token" }
+spl-token = "8.0.0"
+spl-token-2022 = "8.0.0"
+solana-pubkey = { version = "2.2.1", features = [
+    "rand",
+] }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
