@@ -25,22 +25,33 @@ pub mod program_v3_4_0 {
 const SPL_TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
 const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
 const SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
-const SPL_TOKEN_ACCOUNT_INITIALIZED_OFFSET: usize = 108;
+const SPL_TOKEN_ACCOUNT_STATE_OFFSET: usize = 108;
 pub(crate) const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;
 
-const ACCOUNTSTATE_UNINITIALIZED: u8 = 0;
+/*
+    spl_token::state::Mint {
+        mint_authority: COption<Pubkey>,
+        supply: u64,
+        decimals: u8,
+        is_initialized: bool,
+        freeze_authority: COption<Pubkey>,
+    }
+*/
+const SPL_TOKEN_MINT_SUPPLY_OFFSET: usize = 36;
+const SPL_TOKEN_MINT_DECIMALS_OFFSET: usize = 44;
+const SPL_TOKEN_MINT_IS_INITIALIZED_OFFSET: usize = 45;
+pub(crate) const SPL_TOKEN_MINT_LENGTH: usize = 82;
 
-// TODO move other consts up
+pub(crate) fn is_initialized_account(account_data: &[u8]) -> bool {
+    is_initialized_token_data(account_data, SPL_TOKEN_ACCOUNT_STATE_OFFSET)
+}
 
-pub(crate) const SPL_TOKEN_MULTISIG__LENGTH: usize = 355;
+pub(crate) fn is_initialized_mint(account_data: &[u8]) -> bool {
+    is_initialized_token_data(account_data, SPL_TOKEN_MINT_IS_INITIALIZED_OFFSET)
+}
 
-/// Check if the account data buffer represents an initialized account.
-/// This is checking the `state` (`AccountState`) field of an Account object.
-pub fn is_initialized_account(account_data: &[u8]) -> bool {
-    *account_data
-        .get(SPL_TOKEN_ACCOUNT_INITIALIZED_OFFSET)
-        .unwrap_or(&ACCOUNTSTATE_UNINITIALIZED)
-        != ACCOUNTSTATE_UNINITIALIZED
+fn is_initialized_token_data(account_data: &[u8], offset: usize) -> bool {
+    *account_data.get(offset).unwrap_or(&0) != 0
 }
 
 macro_rules! define_checked_getter {
@@ -103,19 +114,6 @@ impl GenericTokenAccount for Account {
     }
 }
 
-/*
-    spl_token::state::Mint {
-        mint_authority: COption<Pubkey>,
-        supply: u64,
-        decimals: u8,
-        is_initialized: bool,
-        freeze_authority: COption<Pubkey>,
-    }
-*/
-const SPL_TOKEN_MINT_SUPPLY_OFFSET: usize = 36;
-const SPL_TOKEN_MINT_DECIMALS_OFFSET: usize = 44;
-const SPL_TOKEN_MINT_LENGTH: usize = 82;
-
 // Trait for retrieving supply and decimals from any token mint-like buffer.
 // A token program that copies the spl_token layout need only impl `valid_account_data()`.
 // We do not use bytemuck for this because Mint is an unaligned struct.
@@ -151,7 +149,7 @@ impl Mint {
 
 impl GenericTokenMint for Mint {
     fn valid_account_data(account_data: &[u8]) -> bool {
-        account_data.len() == SPL_TOKEN_MINT_LENGTH
+        account_data.len() == SPL_TOKEN_MINT_LENGTH && is_initialized_mint(account_data)
     }
 }
 
