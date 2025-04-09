@@ -25,7 +25,23 @@ pub mod program_v3_4_0 {
 const SPL_TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
 const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
 const SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
-const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;
+const SPL_TOKEN_ACCOUNT_INITIALIZED_OFFSET: usize = 108;
+pub(crate) const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;
+
+const ACCOUNTSTATE_UNINITIALIZED: u8 = 0;
+
+// TODO move other consts up
+
+pub(crate) const SPL_TOKEN_MULTISIG__LENGTH: usize = 355;
+
+/// Check if the account data buffer represents an initialized account.
+/// This is checking the `state` (`AccountState`) field of an Account object.
+pub fn is_initialized_account(account_data: &[u8]) -> bool {
+    *account_data
+        .get(SPL_TOKEN_ACCOUNT_INITIALIZED_OFFSET)
+        .unwrap_or(&ACCOUNTSTATE_UNINITIALIZED)
+        != ACCOUNTSTATE_UNINITIALIZED
+}
 
 macro_rules! define_checked_getter {
     ($checked_fn:ident, $unchecked_fn:ident, $typ:ty) => {
@@ -83,7 +99,7 @@ impl Account {
 
 impl GenericTokenAccount for Account {
     fn valid_account_data(account_data: &[u8]) -> bool {
-        account_data.len() == SPL_TOKEN_ACCOUNT_LENGTH
+        account_data.len() == SPL_TOKEN_ACCOUNT_LENGTH && is_initialized_account(account_data)
     }
 }
 
