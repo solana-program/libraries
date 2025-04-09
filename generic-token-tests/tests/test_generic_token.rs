@@ -7,6 +7,8 @@ use {
     },
 };
 
+// TODO actually use the 22 structs, i got this wrong
+
 #[test]
 fn test_generic_account() {
     let mut rng = thread_rng();
@@ -67,6 +69,16 @@ fn test_generic_account() {
         assert_eq!(test_account.mint, expected_account.mint);
         assert_eq!(test_account.owner, expected_account.owner);
         assert_eq!(test_account.amount, expected_account.amount);
+
+        assert_eq!(
+            generic_token::Mint::unpack(&account_data, &token::id()),
+            None
+        );
+
+        assert_eq!(
+            generic_token::Mint::unpack(&account_data, &token_2022::id()),
+            None
+        )
     }
 }
 
@@ -121,5 +133,15 @@ fn test_generic_mint() {
 
         assert_eq!(test_mint.supply, test_mint.supply);
         assert_eq!(test_mint.decimals, test_mint.decimals);
+
+        assert_eq!(
+            generic_token::Account::unpack(&account_data, &token::id()),
+            None
+        );
+
+        assert_eq!(
+            generic_token::Account::unpack(&account_data, &token_2022::id()),
+            None
+        );
     }
 }
