@@ -19,6 +19,7 @@ spl-token-2022 = "8.0.0"
 solana-pubkey = { version = "2.2.1", features = [
     "rand",
 ] }
+test-case = "3.3.1"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
