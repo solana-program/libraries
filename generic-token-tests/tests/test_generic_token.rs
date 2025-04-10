@@ -169,7 +169,7 @@ fn test_generic_mint(is_token_2022_mint: bool) {
 
         // check the basic rules of the parser:
         // * uninitialized mints never parse
-        // * standard token mint parse as both
+        // * standard token mints parse as both
         // * typed 2022 mints parse only as 2022
         if is_initialized && is_token_2022_mint {
             account_data.resize(SplAccount::LEN + 2, 0);
