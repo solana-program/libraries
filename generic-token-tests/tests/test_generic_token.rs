@@ -12,6 +12,12 @@ use {
     test_case::test_case,
 };
 
+#[test]
+fn test_get_packed_len() {
+    assert_eq!(token::Account::get_packed_len(), SplAccount::LEN);
+    assert_eq!(token::Mint::get_packed_len(), SplMint::LEN);
+}
+
 fn random_token_account() -> SplAccount {
     let mut rng = thread_rng();
 
