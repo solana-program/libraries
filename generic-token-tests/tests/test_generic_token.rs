@@ -62,8 +62,6 @@ fn test_generic_account(is_token_2022_account: bool) {
         // * uninitialized accounts never parse
         // * standard token accounts parse as both
         // * typed 2022 accounts parse only as 2022
-        // note the program_id passed tells the parser how to *treat* the account
-        // what the account actually "is" (or "could be") is determined solely by its data
         if is_initialized && is_token_2022_account {
             account_data.resize(SplAccount::LEN + 2, 0);
             set_account_type::<SplAccount2022>(&mut account_data).unwrap();
@@ -133,65 +131,107 @@ fn test_generic_account(is_token_2022_account: bool) {
     }
 }
 
-#[test]
-fn test_generic_mint() {
+fn random_mint() -> SplMint {
     let mut rng = thread_rng();
 
-    for _ in 0..1000 {
-        let mint_authority = if rng.gen() {
-            Some(solana_pubkey::new_rand())
-        } else {
-            None
-        }
-        .into();
-        let supply = rng.gen();
-        let decimals = rng.gen();
-        let is_initialized = rng.gen();
-        let freeze_authority = if rng.gen() {
-            Some(solana_pubkey::new_rand())
-        } else {
-            None
-        }
-        .into();
+    let mint_authority = if rng.gen() {
+        Some(solana_pubkey::new_rand())
+    } else {
+        None
+    }
+    .into();
+    let supply = rng.gen();
+    let decimals = rng.gen();
+    let is_initialized = rng.gen();
+    let freeze_authority = if rng.gen() {
+        Some(solana_pubkey::new_rand())
+    } else {
+        None
+    }
+    .into();
 
-        let expected_mint = SplMint {
-            mint_authority,
-            supply,
-            decimals,
-            is_initialized,
-            freeze_authority,
-        };
+    SplMint {
+        mint_authority,
+        supply,
+        decimals,
+        is_initialized,
+        freeze_authority,
+    }
+}
+
+#[test_case(false; "spl_token")]
+#[test_case(true; "spl_token_2022")]
+fn test_generic_mint(is_token_2022_mint: bool) {
+    for _ in 0..1000 {
+        let expected_mint = random_mint();
+        let is_initialized = expected_mint.is_initialized;
 
         let mut account_data = vec![0; SplMint::LEN];
         expected_mint.pack_into_slice(&mut account_data);
 
-        let is_token_2022_mint = rng.gen();
-        if is_token_2022_mint {
-            account_data.push(1);
+        // check the basic rules of the parser:
+        // * uninitialized mints never parse
+        // * standard token mint parse as both
+        // * typed 2022 mints parse only as 2022
+        if is_initialized && is_token_2022_mint {
+            account_data.resize(SplAccount::LEN + 2, 0);
+            set_account_type::<SplMint2022>(&mut account_data).unwrap();
 
+            // token
             assert_eq!(
                 generic_token::Mint::unpack(&account_data, &token::id()),
                 None
             );
-        } else {
+
+            // token22
+            let test_mint = generic_token::Mint::unpack(&account_data, &token_2022::id()).unwrap();
+
+            assert_eq!(test_mint.supply, expected_mint.supply);
+            assert_eq!(test_mint.decimals, expected_mint.decimals);
+        } else if is_initialized {
+            // token
             let test_mint = generic_token::Mint::unpack(&account_data, &token::id()).unwrap();
 
-            assert_eq!(test_mint.supply, test_mint.supply);
-            assert_eq!(test_mint.decimals, test_mint.decimals);
+            assert_eq!(test_mint.supply, expected_mint.supply);
+            assert_eq!(test_mint.decimals, expected_mint.decimals);
+
+            // token22
+            let test_mint = generic_token::Mint::unpack(&account_data, &token_2022::id()).unwrap();
+
+            assert_eq!(test_mint.supply, expected_mint.supply);
+            assert_eq!(test_mint.decimals, expected_mint.decimals);
+        } else {
+            // token
+            assert_eq!(
+                generic_token::Mint::unpack(&account_data, &token::id()),
+                None
+            );
+
+            // token22
+            assert_eq!(
+                generic_token::Mint::unpack(&account_data, &token_2022::id()),
+                None
+            );
         }
 
-        let test_mint = generic_token::Mint::unpack(&account_data, &token_2022::id()).unwrap();
-
-        assert_eq!(test_mint.supply, test_mint.supply);
-        assert_eq!(test_mint.decimals, test_mint.decimals);
-
+        // a mint should never parse as a token account
         assert_eq!(
             generic_token::Account::unpack(&account_data, &token::id()),
             None
         );
-
         assert_eq!(
             generic_token::Account::unpack(&account_data, &token_2022::id()),
+            None
+        );
+
+        // an otherwise valid mint should never parse if it is of multisig length
+        account_data.resize(MULTISIG_LEN, 0);
+        assert_eq!(
+            generic_token::Mint::unpack(&account_data, &token::id()),
+            None
+        );
+        assert_eq!(
+            generic_token::Mint::unpack(&account_data, &token_2022::id()),
             None
         );
     }
