@@ -7,12 +7,10 @@ use {
     },
     spl_token_2022::{
         extension::set_account_type,
-        state::{Account as SplAccount2022, Mint as SplMint2022},
+        state::{Account as SplAccount2022, Mint as SplMint2022, Multisig as SplMultisig},
     },
     test_case::test_case,
 };
-
-const MULTISIG_LEN: usize = 355;
 
 fn random_token_account() -> SplAccount {
     let mut rng = thread_rng();
@@ -119,7 +117,7 @@ fn test_generic_account(is_token_2022_account: bool) {
         );
 
         // an otherwise valid token account should never parse if it is of multisig length
-        account_data.resize(MULTISIG_LEN, 0);
+        account_data.resize(SplMultisig::LEN, 0);
         assert_eq!(
             generic_token::Account::unpack(&account_data, &token::id()),
             None
@@ -225,7 +223,7 @@ fn test_generic_mint(is_token_2022_mint: bool) {
         );
 
         // an otherwise valid mint should never parse if it is of multisig length
-        account_data.resize(MULTISIG_LEN, 0);
+        account_data.resize(SplMultisig::LEN, 0);
         assert_eq!(
             generic_token::Mint::unpack(&account_data, &token::id()),
             None
