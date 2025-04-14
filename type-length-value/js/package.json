@@ -49,21 +49,22 @@
         "buffer": "^6.0.3"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^3.3.1",
+        "@eslint/js": "^9.24.0",
         "@solana/prettier-config-solana": "^0.0.5",
         "@types/chai": "^5.0.1",
         "@types/mocha": "^10.0.10",
         "@types/node": "^22.10.2",
-        "@typescript-eslint/eslint-plugin": "^8.4.0",
-        "@typescript-eslint/parser": "^8.4.0",
         "chai": "^5.1.2",
-        "eslint": "^8.57.0",
-        "eslint-plugin-require-extensions": "^0.1.1",
-        "prettier": "^3.4.2",
+        "eslint": "^9.24.0",
+        "eslint-plugin-import-extensions": "^0.1.5",
         "gh-pages": "^6.2.0",
         "mocha": "^11.0.1",
+        "prettier": "^3.4.2",
         "shx": "^0.3.4",
         "ts-node": "^10.9.2",
         "typedoc": "^0.27.4",
-        "typescript": "^5.7.2"
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.30.0"
     }
 }
