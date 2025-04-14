@@ -19,8 +19,8 @@ solana_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
         close_authority: COption<Pubkey>,
     }
 */
-const SPL_TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
-const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
+pub const SPL_TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
+pub const SPL_TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
 const SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
 const SPL_TOKEN_ACCOUNT_STATE_OFFSET: usize = 108;
 pub(crate) const SPL_TOKEN_ACCOUNT_LENGTH: usize = 165;

@@ -8,7 +8,7 @@ use crate::token::{
 solana_pubkey::declare_id!("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
 // `spl_token_program_2022::extension::AccountType::Account` ordinal value
-const ACCOUNTTYPE_ACCOUNT: u8 = 2;
+pub const ACCOUNTTYPE_ACCOUNT: u8 = 2;
 
 // Token2022 enforces that TLV data cannot make a Mint or Account that is precisely
 // the length of a Multisig, to allow them to be distinguished.
