@@ -1,4 +1,5 @@
-/// Partial SPL Token declarations to avoid a dependency on the spl-token-2022 crate.
+//! Partial SPL Token declarations to avoid a dependency on the spl-token-2022 crate.
+
 use crate::token::{
     self, is_initialized_account, is_initialized_mint, GenericTokenAccount, GenericTokenMint,
     SPL_TOKEN_ACCOUNT_LENGTH,
@@ -11,14 +12,14 @@ const ACCOUNTTYPE_ACCOUNT: u8 = 2;
 
 // Token2022 enforces that TLV data cannot make a Mint or Account that is precisely
 // the length of a Multisig, to allow them to be distinguished.
-const SPL_TOKEN_MULTISIG__LENGTH: usize = 355;
+const SPL_TOKEN_MULTISIG_LENGTH: usize = 355;
 
 pub struct Account;
 impl GenericTokenAccount for Account {
     fn valid_account_data(account_data: &[u8]) -> bool {
         token::Account::valid_account_data(account_data)
             || (account_data.len() > SPL_TOKEN_ACCOUNT_LENGTH
-                && account_data.len() != SPL_TOKEN_MULTISIG__LENGTH
+                && account_data.len() != SPL_TOKEN_MULTISIG_LENGTH
                 && ACCOUNTTYPE_ACCOUNT == account_data[SPL_TOKEN_ACCOUNT_LENGTH]
                 && is_initialized_account(account_data))
     }
@@ -35,7 +36,7 @@ impl GenericTokenMint for Mint {
     fn valid_account_data(account_data: &[u8]) -> bool {
         token::Mint::valid_account_data(account_data)
             || (account_data.len() > SPL_TOKEN_ACCOUNT_LENGTH
-                && account_data.len() != SPL_TOKEN_MULTISIG__LENGTH
+                && account_data.len() != SPL_TOKEN_MULTISIG_LENGTH
                 && ACCOUNTTYPE_MINT == account_data[SPL_TOKEN_ACCOUNT_LENGTH]
                 && is_initialized_mint(account_data))
     }

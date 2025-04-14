@@ -1,14 +1,11 @@
-/// Partial SPL Token declarations to avoid a dependency on the spl-token crate.
+//! Partial SPL Token declarations to avoid a dependency on the spl-token crate.
+
 use {
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
     std::mem,
 };
 
 solana_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-
-pub mod program_v3_4_0 {
-    solana_pubkey::declare_id!("NToK4t5AQzxPNpUA84DkxgfXaVDbDQQjpHKCqsbY46B");
-}
 
 /*
     spl_token::state::Account {
@@ -66,6 +63,13 @@ macro_rules! define_checked_getter {
     };
 }
 
+// necessary to forgo bytemuck to treat endianness correctly on BE systems
+fn unpack_u64_unchecked(account_data: &[u8], offset: usize) -> u64 {
+    let mut bytes = [0u8; 8];
+    bytes.copy_from_slice(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())]);
+    u64::from_le_bytes(bytes)
+}
+
 // Trait for retrieving mint address, owner, and amount from any token account-like buffer.
 // A token program that copies the spl_token layout need only impl `valid_account_data()`.
 pub trait GenericTokenAccount {
@@ -91,8 +95,7 @@ pub trait GenericTokenAccount {
 
     // Call after account length has already been verified
     fn unpack_account_amount_unchecked(account_data: &[u8]) -> u64 {
-        let offset = SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET;
-        *bytemuck::from_bytes(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())])
+        unpack_u64_unchecked(account_data, SPL_TOKEN_ACCOUNT_AMOUNT_OFFSET)
     }
 
     // Call after account length has already been verified
@@ -103,7 +106,7 @@ pub trait GenericTokenAccount {
 
 pub struct Account;
 impl Account {
-    pub fn get_packed_len() -> usize {
+    pub const fn get_packed_len() -> usize {
         SPL_TOKEN_ACCOUNT_LENGTH
     }
 }
@@ -125,13 +128,7 @@ pub trait GenericTokenMint {
 
     // Call after account length has already been verified
     fn unpack_mint_supply_unchecked(account_data: &[u8]) -> u64 {
-        let mut supply_bytes = [0u8; 8];
-        let offset = SPL_TOKEN_MINT_SUPPLY_OFFSET;
-
-        supply_bytes
-            .copy_from_slice(&account_data[offset..offset.wrapping_add(mem::size_of::<u64>())]);
-
-        u64::from_le_bytes(supply_bytes)
+        unpack_u64_unchecked(account_data, SPL_TOKEN_MINT_SUPPLY_OFFSET)
     }
 
     // Call after account length has already been verified
@@ -142,7 +139,7 @@ pub trait GenericTokenMint {
 
 pub struct Mint;
 impl Mint {
-    pub fn get_packed_len() -> usize {
+    pub const fn get_packed_len() -> usize {
         SPL_TOKEN_MINT_LENGTH
     }
 }

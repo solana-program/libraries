@@ -1,10 +1,11 @@
-/// Minimum viable SPL Token parsers to avoid a dependency on the spl-token and spl-token-2022 crates.
-/// Users may use the generic traits directly, but this requires them to select the correct implementation
-/// based on the account's program id. `generic_token::Account` and `generic_token::Mint` abstract over
-/// this and require no knowledge of the different token programs on the part of the caller at all.
-///
-/// We provide the minimum viable interface to determine balances and ownership. For more advanced use-cases,
-/// it is recommended to use to full token program crates instead.
+//! Minimum viable SPL Token parsers to avoid a dependency on the spl-token and spl-token-2022 crates.
+//! Users may use the generic traits directly, but this requires them to select the correct implementation
+//! based on the account's program id. `generic_token::Account` and `generic_token::Mint` abstract over
+//! this and require no knowledge of the different token programs on the part of the caller at all.
+//!
+//! We provide the minimum viable interface to determine balances and ownership. For more advanced use-cases,
+//! it is recommended to use to full token program crates instead.
+
 use {
     crate::{
         token::{self, GenericTokenAccount, GenericTokenMint},

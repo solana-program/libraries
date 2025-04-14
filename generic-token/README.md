@@ -7,13 +7,13 @@ Library that provides bare-bones, dependency-minimized access to SPL Token balan
 This library provides two core structs:
 
 ```rust
-generic_token::Account {
+spl_generic_token::generic_token::Account {
     mint: Pubkey,
     owner: Pubkey,
     amount: u64,
 }
 
-generic_token::Mint {
+spl_generic_token::generic_token::Mint {
     supply: u64,
     decimals: u8,
 }
