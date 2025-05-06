@@ -104,7 +104,6 @@ pub fn print_program_error(
             where
                 E: 'static
                     + std::error::Error
-                    + #decode_error_import::DecodeError<E>
                     + #program_error_import::PrintProgramError
                     + num_traits::FromPrimitive,
             {

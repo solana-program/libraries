@@ -1,6 +1,5 @@
 //! Error types
 use {
-    solana_decode_error::DecodeError,
     solana_msg::msg,
     solana_program_error::{PrintProgramError, ProgramError},
 };
@@ -23,20 +22,10 @@ impl From<TlvError> for ProgramError {
     }
 }
 
-impl<T> DecodeError<T> for TlvError {
-    fn type_of() -> &'static str {
-        "TlvError"
-    }
-}
-
 impl PrintProgramError for TlvError {
     fn print<E>(&self)
     where
-        E: 'static
-            + std::error::Error
-            + DecodeError<E>
-            + PrintProgramError
-            + num_traits::FromPrimitive,
+        E: 'static + std::error::Error + PrintProgramError + num_traits::FromPrimitive,
     {
         match self {
             TlvError::TypeNotFound => {

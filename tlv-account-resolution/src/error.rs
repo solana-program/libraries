@@ -1,7 +1,6 @@
 //! Error types
 
 use {
-    solana_decode_error::DecodeError,
     solana_msg::msg,
     solana_program_error::{PrintProgramError, ProgramError},
 };
@@ -82,20 +81,10 @@ impl From<AccountResolutionError> for ProgramError {
     }
 }
 
-impl<T> DecodeError<T> for AccountResolutionError {
-    fn type_of() -> &'static str {
-        "AccountResolutionError"
-    }
-}
-
 impl PrintProgramError for AccountResolutionError {
     fn print<E>(&self)
     where
-        E: 'static
-            + std::error::Error
-            + DecodeError<E>
-            + PrintProgramError
-            + num_traits::FromPrimitive,
+        E: 'static + std::error::Error + PrintProgramError + num_traits::FromPrimitive,
     {
         match self {
             AccountResolutionError::IncorrectAccount => {

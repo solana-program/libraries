@@ -28,7 +28,6 @@ impl solana_program_error::PrintProgramError for ExampleError {
     where
         E: 'static
             + std::error::Error
-            + solana_decode_error::DecodeError<E>
             + solana_program_error::PrintProgramError
             + num_traits::FromPrimitive,
     {
