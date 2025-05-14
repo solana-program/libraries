@@ -15,7 +15,7 @@ edition = "2021"
 rand = "0.9.1"
 spl-generic-token = { path = "../generic-token" }
 spl-token = "8.0.0"
-spl-token-2022 = "8.0.0"
+spl-token-2022 = "9.0.0"
 solana-pubkey = { version = "2.2.1", features = [
     "rand",
 ] }
