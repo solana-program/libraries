@@ -1,5 +1,6 @@
 //! State transition types
 
+use spl_pod::list::PodList;
 use {
     crate::{account::ExtraAccountMeta, error::AccountResolutionError},
     solana_account_info::AccountInfo,
@@ -7,7 +8,7 @@ use {
     solana_program_error::ProgramError,
     solana_pubkey::Pubkey,
     spl_discriminator::SplDiscriminate,
-    spl_pod::slice::{PodSlice, PodSliceMut},
+    spl_pod::slice::PodSlice,
     spl_type_length_value::state::{TlvState, TlvStateBorrowed, TlvStateMut},
     std::future::Future,
 };
@@ -172,7 +173,7 @@ impl ExtraAccountMetaList {
         let mut state = TlvStateMut::unpack(data).unwrap();
         let tlv_size = PodSlice::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let (bytes, _) = state.alloc::<T>(tlv_size, false)?;
-        let mut validation_data = PodSliceMut::init(bytes)?;
+        let mut validation_data = PodList::init(bytes)?;
         for meta in extra_account_metas {
             validation_data.push(*meta)?;
         }
@@ -188,7 +189,7 @@ impl ExtraAccountMetaList {
         let mut state = TlvStateMut::unpack(data).unwrap();
         let tlv_size = PodSlice::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let bytes = state.realloc_first::<T>(tlv_size)?;
-        let mut validation_data = PodSliceMut::init(bytes)?;
+        let mut validation_data = PodList::init(bytes)?;
         for meta in extra_account_metas {
             validation_data.push(*meta)?;
         }
