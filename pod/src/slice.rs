@@ -49,12 +49,18 @@ impl<'data, T: Pod> PodSlice<'data, T> {
     }
 }
 
+#[deprecated(
+    since = "0.6.0",
+    note = "This struct will be removed in the next major release (1.0.0). Please use `PodList` instead."
+)]
 /// Special type for using a slice of mutable `Pod`s in a zero-copy way
 pub struct PodSliceMut<'data, T: Pod> {
     length: &'data mut PodU32,
     data: &'data mut [T],
     max_length: usize,
 }
+
+#[allow(deprecated)]
 impl<'data, T: Pod> PodSliceMut<'data, T> {
     /// Unpack the mutable buffer into a mutable slice, with the option to
     /// initialize the data
@@ -109,7 +115,7 @@ impl<'data, T: Pod> PodSliceMut<'data, T> {
     }
 }
 
-fn max_len_for_type<T>(data_len: usize, length_val: usize) -> Result<usize, ProgramError> {
+pub fn max_len_for_type<T>(data_len: usize, length_val: usize) -> Result<usize, ProgramError> {
     let item_size = std::mem::size_of::<T>();
     let max_len = data_len
         .checked_div(item_size)
@@ -136,6 +142,7 @@ fn max_len_for_type<T>(data_len: usize, length_val: usize) -> Result<usize, Prog
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use {
         super::*,
