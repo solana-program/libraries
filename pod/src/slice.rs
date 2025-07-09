@@ -2,10 +2,9 @@
 
 use {
     crate::{
-        bytemuck::{
-            pod_from_bytes, pod_from_bytes_mut, pod_slice_from_bytes, pod_slice_from_bytes_mut,
-        },
+        bytemuck::{pod_from_bytes, pod_slice_from_bytes},
         error::PodSliceError,
+        list::ListView,
         primitives::PodU32,
     },
     bytemuck::Pod,
@@ -51,46 +50,23 @@ impl<'data, T: Pod> PodSlice<'data, T> {
 
 #[deprecated(
     since = "0.6.0",
-    note = "This struct will be removed in the next major release (1.0.0). Please use `PodList` instead."
+    note = "This struct will be removed in the next major release (1.0.0). Please use `ListView` instead."
 )]
-/// Special type for using a slice of mutable `Pod`s in a zero-copy way
+/// Special type for using a slice of mutable `Pod`s in a zero-copy way.
+/// Uses `ListView` under the hood.
 pub struct PodSliceMut<'data, T: Pod> {
-    length: &'data mut PodU32,
-    data: &'data mut [T],
-    max_length: usize,
+    inner: ListView<'data, T, PodU32>,
 }
 
 #[allow(deprecated)]
 impl<'data, T: Pod> PodSliceMut<'data, T> {
-    /// Unpack the mutable buffer into a mutable slice, with the option to
-    /// initialize the data
-    fn unpack_internal<'a>(data: &'a mut [u8], init: bool) -> Result<Self, ProgramError>
-    where
-        'a: 'data,
-    {
-        if data.len() < LENGTH_SIZE {
-            return Err(PodSliceError::BufferTooSmall.into());
-        }
-        let (length, data) = data.split_at_mut(LENGTH_SIZE);
-        let length = pod_from_bytes_mut::<PodU32>(length)?;
-        if init {
-            *length = 0.into();
-        }
-        let max_length = max_len_for_type::<T>(data.len(), u32::from(*length) as usize)?;
-        let data = pod_slice_from_bytes_mut(data)?;
-        Ok(Self {
-            length,
-            data,
-            max_length,
-        })
-    }
-
     /// Unpack the mutable buffer into a mutable slice
     pub fn unpack<'a>(data: &'a mut [u8]) -> Result<Self, ProgramError>
     where
         'a: 'data,
     {
-        Self::unpack_internal(data, /* init */ false)
+        let inner = ListView::<T, PodU32>::unpack(data)?;
+        Ok(Self { inner })
     }
 
     /// Unpack the mutable buffer into a mutable slice, and initialize the
@@ -99,23 +75,17 @@ impl<'data, T: Pod> PodSliceMut<'data, T> {
     where
         'a: 'data,
     {
-        Self::unpack_internal(data, /* init */ true)
+        let inner = ListView::<T, PodU32>::init(data)?;
+        Ok(Self { inner })
     }
 
     /// Add another item to the slice
     pub fn push(&mut self, t: T) -> Result<(), ProgramError> {
-        let length = u32::from(*self.length);
-        if length as usize == self.max_length {
-            Err(PodSliceError::BufferTooSmall.into())
-        } else {
-            self.data[length as usize] = t;
-            *self.length = length.saturating_add(1).into();
-            Ok(())
-        }
+        self.inner.push(t)
     }
 }
 
-pub fn max_len_for_type<T>(data_len: usize, length_val: usize) -> Result<usize, ProgramError> {
+fn max_len_for_type<T>(data_len: usize, length_val: usize) -> Result<usize, ProgramError> {
     let item_size = std::mem::size_of::<T>();
     let max_len = data_len
         .checked_div(item_size)
@@ -275,11 +245,33 @@ mod tests {
         let len_bytes = [1, 0, 0, 0];
         pod_slice_bytes[0..4].copy_from_slice(&len_bytes);
 
-        let mut pod_slice = PodSliceMut::<TestStruct>::unpack(&mut pod_slice_bytes).unwrap();
+        // Verify initial length
+        assert_eq!(
+            u32::from_le_bytes([
+                pod_slice_bytes[0],
+                pod_slice_bytes[1],
+                pod_slice_bytes[2],
+                pod_slice_bytes[3]
+            ]),
+            1
+        );
 
-        assert_eq!(*pod_slice.length, PodU32::from(1));
+        let mut pod_slice = PodSliceMut::<TestStruct>::unpack(&mut pod_slice_bytes).unwrap();
         pod_slice.push(TestStruct::default()).unwrap();
-        assert_eq!(*pod_slice.length, PodU32::from(2));
+
+        // Check length after push
+        assert_eq!(
+            u32::from_le_bytes([
+                pod_slice_bytes[0],
+                pod_slice_bytes[1],
+                pod_slice_bytes[2],
+                pod_slice_bytes[3]
+            ]),
+            2
+        );
+
+        // Test that buffer is full
+        let mut pod_slice = PodSliceMut::<TestStruct>::unpack(&mut pod_slice_bytes).unwrap();
         let err = pod_slice
             .push(TestStruct::default())
             .expect_err("Expected an `PodSliceError::BufferTooSmall` error");
