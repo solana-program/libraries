@@ -50,7 +50,9 @@ impl<'data, T: Pod> PodSlice<'data, T> {
 
 #[deprecated(
     since = "0.6.0",
-    note = "This struct will be removed in the next major release (1.0.0). Please use `ListView` instead."
+    note = "This struct will be removed in the next major release (1.0.0). \
+    Please use `ListView` instead. If using with existing data initialized by PodSliceMut, \
+    you need to specifiy PodU32 length (e.g. ListView::<ItemStruct, PodU32>::init(bytes))"
 )]
 /// Special type for using a slice of mutable `Pod`s in a zero-copy way.
 /// Uses `ListView` under the hood.
