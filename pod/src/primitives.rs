@@ -127,6 +127,47 @@ impl_int_conversion!(PodI64, i64);
 pub struct PodU128(pub [u8; 16]);
 impl_int_conversion!(PodU128, u128);
 
+/// Trait for types that can be used as length fields in Pod data structures
+pub trait PodLength: bytemuck::Pod + Copy {
+    fn as_usize(&self) -> usize;
+
+    fn from_usize(val: usize) -> Result<Self, crate::error::PodSliceError>;
+}
+
+impl PodLength for PodU16 {
+    fn as_usize(&self) -> usize {
+        u16::from(*self) as usize
+    }
+
+    fn from_usize(val: usize) -> Result<Self, crate::error::PodSliceError> {
+        u16::try_from(val)
+            .map(Into::into)
+            .map_err(|_| crate::error::PodSliceError::CalculationFailure)
+    }
+}
+
+impl PodLength for PodU32 {
+    fn as_usize(&self) -> usize {
+        u32::from(*self) as usize
+    }
+
+    fn from_usize(val: usize) -> Result<Self, crate::error::PodSliceError> {
+        u32::try_from(val)
+            .map(Into::into)
+            .map_err(|_| crate::error::PodSliceError::CalculationFailure)
+    }
+}
+
+impl PodLength for PodU64 {
+    fn as_usize(&self) -> usize {
+        u64::from(*self) as usize
+    }
+
+    fn from_usize(val: usize) -> Result<Self, crate::error::PodSliceError> {
+        Ok((val as u64).into())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use {super::*, crate::bytemuck::pod_from_bytes};
