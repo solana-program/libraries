@@ -2,6 +2,7 @@
 use {
     solana_msg::msg,
     solana_program_error::{PrintProgramError, ProgramError},
+    std::num::TryFromIntError,
 };
 
 /// Errors that may be returned by the spl-pod library.
@@ -47,5 +48,11 @@ impl PrintProgramError for PodSliceError {
                 msg!("Provided byte buffer too large for expected type")
             }
         }
+    }
+}
+
+impl From<TryFromIntError> for PodSliceError {
+    fn from(_: TryFromIntError) -> Self {
+        PodSliceError::CalculationFailure
     }
 }
