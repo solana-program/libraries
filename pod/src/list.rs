@@ -2,7 +2,8 @@ use {
     crate::{
         bytemuck::{pod_from_bytes_mut, pod_slice_from_bytes_mut},
         error::PodSliceError,
-        primitives::{PodLength, PodU64},
+        pod_length::PodLength,
+        primitives::PodU64,
     },
     bytemuck::Pod,
     core::mem::{align_of, size_of},
@@ -29,15 +30,15 @@ fn calculate_padding<L: Pod, T: Pod>() -> Result<usize, ProgramError> {
     }
 }
 
-/// A mutable, variable-length collection of `Pod` types backed by a byte buffer.
+/// An API for interpreting a raw buffer (`&[u8]`) as a mutable, variable-length collection of Pod elements.
 ///
 /// `ListView` provides a safe, zero-copy, `Vec`-like interface for a slice of
 /// `Pod` data that resides in an external, pre-allocated `&mut [u8]` buffer.
 /// It does not own the buffer itself, but acts as a mutable view over it.
 ///
 /// This is useful in environments where allocations are restricted or expensive,
-/// such as Solana programs, allowing for dynamic-length data structures within a
-/// fixed-size account.
+/// such as Solana programs, allowing for efficient reads and manipulation of
+/// dynamic-length data structures.
 ///
 /// ## Memory Layout
 ///
@@ -85,8 +86,8 @@ impl<'data, T: Pod, L: PodLength> ListView<'data, T, L> {
 
         // Initialize the list or validate its current length.
         if init {
-            *length = L::from_usize(0)?;
-        } else if length.as_usize() > max_length {
+            *length = L::try_from(0)?;
+        } else if (*length).into() > max_length {
             return Err(PodSliceError::BufferTooSmall.into());
         }
 
@@ -115,21 +116,21 @@ impl<'data, T: Pod, L: PodLength> ListView<'data, T, L> {
     }
 
     /// Add another item to the slice
-    pub fn push(&mut self, t: T) -> Result<(), ProgramError> {
-        let length = self.length.as_usize();
-        if length == self.max_length {
+    pub fn push(&mut self, item: T) -> Result<(), ProgramError> {
+        let length = (*self.length).into();
+        if length >= self.max_length {
             Err(PodSliceError::BufferTooSmall.into())
         } else {
-            self.data[length] = t;
-            *self.length = L::from_usize(length.saturating_add(1))?;
+            self.data[length] = item;
+            *self.length = L::try_from(length.saturating_add(1))?;
             Ok(())
         }
     }
 
     /// Remove and return the element at `index`, shifting all later
     /// elements one position to the left.
-    pub fn remove_at(&mut self, index: usize) -> Result<T, ProgramError> {
-        let len = self.length.as_usize();
+    pub fn remove(&mut self, index: usize) -> Result<T, ProgramError> {
+        let len = (*self.length).into();
         if index >= len {
             return Err(ProgramError::InvalidArgument);
         }
@@ -147,22 +148,9 @@ impl<'data, T: Pod, L: PodLength> ListView<'data, T, L> {
         self.data[last] = T::zeroed();
 
         // Store the new length (len - 1)
-        *self.length = L::from_usize(last)?;
+        *self.length = L::try_from(last)?;
 
         Ok(removed_item)
-    }
-
-    /// Find the first element that satisfies `predicate` and remove it,
-    /// returning the element.
-    pub fn remove_first_where<P>(&mut self, predicate: P) -> Result<T, ProgramError>
-    where
-        P: FnMut(&T) -> bool,
-    {
-        if let Some(index) = self.data.iter().position(predicate) {
-            self.remove_at(index)
-        } else {
-            Err(ProgramError::InvalidArgument)
-        }
     }
 
     /// Get the amount of bytes used by `num_items`
@@ -181,12 +169,24 @@ impl<'data, T: Pod, L: PodLength> ListView<'data, T, L> {
 
     /// Get the current number of items in collection
     pub fn len(&self) -> usize {
-        self.length.as_usize()
+        (*self.length).into()
     }
 
     /// Returns true if the collection is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Returns an iterator over the current elements
+    pub fn iter(&self) -> std::slice::Iter<T> {
+        let len = (*self.length).into();
+        self.data[..len].iter()
+    }
+
+    /// Returns a mutable iterator over the current elements
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
+        let len = (*self.length).into();
+        self.data[..len].iter_mut()
     }
 }
 
@@ -225,7 +225,11 @@ mod tests {
         assert_eq!(err, PodSliceError::BufferTooSmall.into());
     }
 
-    fn make_buffer<L: PodLength>(capacity: usize, items: &[u8]) -> Vec<u8> {
+    fn make_buffer<L: Pod + Into<usize> + TryFrom<usize>>(capacity: usize, items: &[u8]) -> Vec<u8>
+    where
+        PodSliceError: From<<L as TryFrom<usize>>::Error>,
+        <L as TryFrom<usize>>::Error: std::fmt::Debug,
+    {
         let length_size = size_of::<L>();
         let padding_size = calculate_padding::<L, u8>().unwrap();
         let header_size = length_size.saturating_add(padding_size);
@@ -233,7 +237,7 @@ mod tests {
         let mut buf = vec![0u8; buff_len];
 
         // Write the length
-        let length = L::from_usize(items.len()).unwrap();
+        let length = L::try_from(items.len()).unwrap();
         let length_bytes = bytemuck::bytes_of(&length);
         buf[..length_size].copy_from_slice(length_bytes);
 
@@ -247,7 +251,7 @@ mod tests {
     fn remove_at_first_item() {
         let mut buff = make_buffer::<PodU64>(15, &[10, 20, 30, 40]);
         let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_at(0).unwrap();
+        let removed = list_view.remove(0).unwrap();
         assert_eq!(removed, 10);
         assert_eq!(list_view.len(), 3);
         assert_eq!(list_view.data[..list_view.len()].to_vec(), &[20, 30, 40]);
@@ -258,7 +262,7 @@ mod tests {
     fn remove_at_middle_item() {
         let mut buff = make_buffer::<PodU64>(15, &[10, 20, 30, 40]);
         let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_at(2).unwrap();
+        let removed = list_view.remove(2).unwrap();
         assert_eq!(removed, 30);
         assert_eq!(list_view.len(), 3);
         assert_eq!(list_view.data[..list_view.len()].to_vec(), &[10, 20, 40]);
@@ -269,7 +273,7 @@ mod tests {
     fn remove_at_last_item() {
         let mut buff = make_buffer::<PodU64>(15, &[10, 20, 30, 40]);
         let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_at(3).unwrap();
+        let removed = list_view.remove(3).unwrap();
         assert_eq!(removed, 40);
         assert_eq!(list_view.len(), 3);
         assert_eq!(list_view.data[..list_view.len()].to_vec(), &[10, 20, 30]);
@@ -282,7 +286,7 @@ mod tests {
         let original_buff = buff.clone();
 
         let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let err = list_view.remove_at(3).unwrap_err();
+        let err = list_view.remove(3).unwrap_err();
         assert_eq!(err, ProgramError::InvalidArgument);
 
         // list_view should be unchanged
@@ -296,7 +300,7 @@ mod tests {
     fn remove_at_single_element() {
         let mut buff = make_buffer::<PodU64>(1, &[10]);
         let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_at(0).unwrap();
+        let removed = list_view.remove(0).unwrap();
         assert_eq!(removed, 10);
         assert_eq!(list_view.len(), 0);
         assert_eq!(list_view.data[..list_view.len()].to_vec(), &[] as &[u8]);
@@ -309,82 +313,9 @@ mod tests {
         let original_buff = buff.clone();
 
         let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let err = list_view.remove_at(0).unwrap_err();
+        let err = list_view.remove(0).unwrap_err();
         assert_eq!(err, ProgramError::InvalidArgument);
 
-        // Assert list state is unchanged
-        assert_eq!(list_view.len(), 0);
-
-        assert_eq!(buff, original_buff);
-    }
-
-    #[test]
-    fn remove_first_where_first_item() {
-        let mut buff = make_buffer::<PodU64>(3, &[5, 10, 15]);
-        let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_first_where(|&x| x == 5).unwrap();
-        assert_eq!(removed, 5);
-        assert_eq!(list_view.len(), 2);
-        assert_eq!(list_view.data[..list_view.len()].to_vec(), &[10, 15]);
-        assert_eq!(list_view.data[2], 0);
-    }
-
-    #[test]
-    fn remove_first_where_middle_item() {
-        let mut buff = make_buffer::<PodU64>(4, &[1, 2, 3, 4]);
-        let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_first_where(|v| *v == 3).unwrap();
-        assert_eq!(removed, 3);
-        assert_eq!(list_view.len(), 3);
-        assert_eq!(list_view.data[..list_view.len()].to_vec(), &[1, 2, 4]);
-        assert_eq!(list_view.data[3], 0);
-    }
-
-    #[test]
-    fn remove_first_where_last_item() {
-        let mut buff = make_buffer::<PodU64>(3, &[5, 10, 15]);
-        let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_first_where(|&x| x == 15).unwrap();
-        assert_eq!(removed, 15);
-        assert_eq!(list_view.len(), 2);
-        assert_eq!(list_view.data[..list_view.len()].to_vec(), &[5, 10]);
-        assert_eq!(list_view.data[2], 0);
-    }
-
-    #[test]
-    fn remove_first_where_multiple_matches() {
-        let mut buff = make_buffer::<PodU64>(5, &[7, 8, 8, 9, 10]);
-        let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let removed = list_view.remove_first_where(|v| *v == 8).unwrap();
-        assert_eq!(removed, 8); // Removed *first* 8
-        assert_eq!(list_view.len(), 4);
-        // Should remove only the *first* match.
-        assert_eq!(list_view.data[..list_view.len()].to_vec(), &[7, 8, 9, 10]);
-        assert_eq!(list_view.data[4], 0);
-    }
-
-    #[test]
-    fn remove_first_where_not_found() {
-        let mut buff = make_buffer::<PodU64>(3, &[5, 6, 7]);
-        let original_buff = buff.clone();
-
-        let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let err = list_view.remove_first_where(|v| *v == 42).unwrap_err();
-        assert_eq!(err, ProgramError::InvalidArgument);
-        // Assert list state is unchanged
-        assert_eq!(list_view.len(), 3);
-
-        assert_eq!(buff, original_buff);
-    }
-
-    #[test]
-    fn remove_first_where_empty_slice() {
-        let mut buff = make_buffer::<PodU64>(0, &[]);
-        let original_buff = buff.clone();
-
-        let mut list_view = ListView::<u8>::unpack(&mut buff).unwrap();
-        let err = list_view.remove_first_where(|_| true).unwrap_err();
-        assert_eq!(err, ProgramError::InvalidArgument);
         // Assert list state is unchanged
         assert_eq!(list_view.len(), 0);
 
@@ -396,19 +327,19 @@ mod tests {
         // Test with u16 length
         let mut buff16 = make_buffer::<PodU16>(5, &[1, 2, 3]);
         let list16 = ListView::<u8, PodU16>::unpack(&mut buff16).unwrap();
-        assert_eq!(list16.length.as_usize(), 3);
+        assert_eq!(list16.len(), 3);
         assert_eq!(list16.len(), 3);
 
         // Test with u32 length
         let mut buff32 = make_buffer::<PodU32>(5, &[4, 5, 6]);
         let list32 = ListView::<u8, PodU32>::unpack(&mut buff32).unwrap();
-        assert_eq!(list32.length.as_usize(), 3);
+        assert_eq!(list32.len(), 3);
         assert_eq!(list32.len(), 3);
 
         // Test with u64 length
         let mut buff64 = make_buffer::<PodU64>(5, &[7, 8, 9]);
         let list64 = ListView::<u8, PodU64>::unpack(&mut buff64).unwrap();
-        assert_eq!(list64.length.as_usize(), 3);
+        assert_eq!(list64.len(), 3);
         assert_eq!(list64.len(), 3);
     }
 
@@ -484,7 +415,7 @@ mod tests {
         let mut buffer = vec![0u8; buff_len];
 
         // Manually write a length value that exceeds the capacity
-        let invalid_length = PodU32::from_usize(capacity + 1).unwrap();
+        let invalid_length = PodU32::try_from(capacity + 1).unwrap();
         let length_bytes = bytemuck::bytes_of(&invalid_length);
         buffer[..length_size].copy_from_slice(length_bytes);
 
