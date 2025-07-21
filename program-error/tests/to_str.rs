@@ -1,4 +1,4 @@
-//! Tests `#[derive(DecodeError)]`
+//! Tests `#[derive(ToStr)]`
 
 use spl_program_error::*;
 
@@ -6,13 +6,15 @@ use spl_program_error::*;
 #[derive(
     Clone,
     Debug,
-    DecodeError,
     Eq,
     IntoProgramError,
+    ToStr,
     thiserror::Error,
     num_derive::FromPrimitive,
+    num_enum::TryFromPrimitive,
     PartialEq,
 )]
+#[repr(u32)]
 pub enum ExampleError {
     /// Mint has no mint authority
     #[error("Mint has no mint authority")]

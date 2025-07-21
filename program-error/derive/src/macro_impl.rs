@@ -1,7 +1,7 @@
 //! The actual token generator for the macro
 
 use {
-    crate::parser::{SolanaDecodeError, SolanaProgramError, SplProgramErrorArgs},
+    crate::parser::{SolanaProgramError, SplProgramErrorArgs},
     proc_macro2::Span,
     quote::quote,
     sha2::{Digest, Sha256},
@@ -20,10 +20,7 @@ pub enum MacroType {
     IntoProgramError {
         ident: Ident,
     },
-    DecodeError {
-        ident: Ident,
-    },
-    PrintProgramError {
+    ToStr {
         ident: Ident,
         variants: Punctuated<Variant, Comma>,
     },
@@ -37,18 +34,13 @@ impl MacroType {
     /// Generates the corresponding tokens based on variant selection
     pub fn generate_tokens(&mut self) -> proc_macro2::TokenStream {
         let default_solana_program_error = SolanaProgramError::default();
-        let default_solana_decode_error = SolanaDecodeError::default();
         match self {
             Self::IntoProgramError { ident } => {
                 into_program_error(ident, &default_solana_program_error)
             }
-            Self::DecodeError { ident } => decode_error(ident, &default_solana_decode_error),
-            Self::PrintProgramError { ident, variants } => print_program_error(
-                ident,
-                variants,
-                &default_solana_program_error,
-                &default_solana_decode_error,
-            ),
+            Self::ToStr { ident, variants } => {
+                to_str(ident, variants, &default_solana_program_error)
+            }
             Self::SplProgramError { args, item_enum } => spl_program_error(args, item_enum),
         }
     }
@@ -68,52 +60,31 @@ pub fn into_program_error(ident: &Ident, import: &SolanaProgramError) -> proc_ma
     import.wrap(this_impl)
 }
 
-/// Builds the implementation of `solana_decode_error::DecodeError<T>`
-pub fn decode_error(ident: &Ident, import: &SolanaDecodeError) -> proc_macro2::TokenStream {
-    let this_impl = quote! {
-        impl<T> #import::DecodeError<T> for #ident {
-            fn type_of() -> &'static str {
-                stringify!(#ident)
-            }
-        }
-    };
-    import.wrap(this_impl)
-}
-
 /// Builds the implementation of
-/// `solana_program_error::PrintProgramError`
-pub fn print_program_error(
+/// `solana_program_error::ToStr`
+pub fn to_str(
     ident: &Ident,
     variants: &Punctuated<Variant, Comma>,
     program_error_import: &SolanaProgramError,
-    decode_error_import: &SolanaDecodeError,
 ) -> proc_macro2::TokenStream {
     let ppe_match_arms = variants.iter().map(|variant| {
         let variant_ident = &variant.ident;
         let error_msg = get_error_message(variant)
             .unwrap_or_else(|| String::from("Unknown custom program error"));
         quote! {
-            #ident::#variant_ident => {
-                ::solana_msg::msg!(#error_msg)
-            }
+            #ident::#variant_ident => #error_msg
         }
     });
     let this_impl = quote! {
-        impl #program_error_import::PrintProgramError for #ident {
-            fn print<E>(&self)
-            where
-                E: 'static
-                    + std::error::Error
-                    + #program_error_import::PrintProgramError
-                    + num_traits::FromPrimitive,
-            {
+        impl #program_error_import::ToStr for #ident {
+            fn to_str<E>(&self) -> &'static str {
                 match self {
                     #(#ppe_match_arms),*
                 }
             }
         }
     };
-    program_error_import.wrap(decode_error_import.wrap(this_impl))
+    program_error_import.wrap(this_impl)
 }
 
 /// Helper to parse out the string literal from the `#[error(..)]` attribute
@@ -142,25 +113,17 @@ pub fn spl_program_error(
     let ident = &item_enum.ident;
     let variants = &item_enum.variants;
     let into_program_error = into_program_error(ident, &args.program_error_import);
-    let decode_error = decode_error(ident, &args.decode_error_import);
-    let print_program_error = print_program_error(
-        ident,
-        variants,
-        &args.program_error_import,
-        &args.decode_error_import,
-    );
+    let to_str = to_str(ident, variants, &args.program_error_import);
 
     quote! {
         #[repr(u32)]
-        #[derive(Clone, Debug, Eq, thiserror::Error, num_derive::FromPrimitive, PartialEq)]
+        #[derive(Clone, Debug, Eq, thiserror::Error, num_derive::FromPrimitive, num_enum::TryFromPrimitive, PartialEq)]
         #[num_traits = "num_traits"]
         #item_enum
 
         #into_program_error
 
-        #decode_error
-
-        #print_program_error
+        #to_str
     }
 }
 

@@ -3,17 +3,16 @@
 Macros for implementing error-based traits on enums.
 
 - `#[derive(IntoProgramError)]`: automatically derives the trait `From<Self> for solana_program_error::ProgramError`.
-- `#[derive(DecodeError)]`: automatically derives the trait `solana_decode_error::DecodeError<T>`.
-- `#[derive(PrintProgramError)]`: automatically derives the trait `solana_program_error::PrintProgramError`.
+- `#[derive(ToStr)]`: automatically derives the trait `solana_program_error::ToStr`.
 - `#[spl_program_error]`: Automatically derives all below traits:
   - `Clone`
   - `Debug`
   - `Eq`
-  - `DecodeError`
   - `IntoProgramError`
-  - `PrintProgramError`
+  - `ToStr`
   - `thiserror::Error`
   - `num_derive::FromPrimitive`
+  - `num_enum::TryFromPrimitive`
   - `PartialEq`
 
 ### `#[derive(IntoProgramError)]`
@@ -27,6 +26,7 @@ Your enum must implement the following traits in order for this macro to work:
 - `Eq`
 - `thiserror::Error`
 - `num_derive::FromPrimitive`
+- `num_enum::TryFromPrimitive`
 - `PartialEq`
 
 Sample code:
@@ -46,9 +46,9 @@ pub enum ExampleError {
 }
 ```
 
-### `#[derive(DecodeError)]`
+### `#[derive(ToStr)]`
 
-This derive macro automatically derives the trait `solana_decode_error::DecodeError<T>`.
+This derive macro automatically derives the trait `solana_program_error::ToStr`.
 
 Your enum must implement the following traits in order for this macro to work:
 
@@ -56,8 +56,7 @@ Your enum must implement the following traits in order for this macro to work:
 - `Debug`
 - `Eq`
 - `IntoProgramError` (above)
-- `thiserror::Error`
-- `num_derive::FromPrimitive`
+- `num_enum::TryFromPrimitive`
 - `PartialEq`
 
 Sample code:
@@ -67,50 +66,11 @@ Sample code:
 #[derive(
     Clone,
     Debug,
-    DecodeError,
     Eq,
     IntoProgramError,
     thiserror::Error,
     num_derive::FromPrimitive,
-    PartialEq,
-)]
-pub enum ExampleError {
-    /// Mint has no mint authority
-    #[error("Mint has no mint authority")]
-    MintHasNoMintAuthority,
-    /// Incorrect mint authority has signed the instruction
-    #[error("Incorrect mint authority has signed the instruction")]
-    IncorrectMintAuthority,
-}
-```
-
-### `#[derive(PrintProgramError)]`
-
-This derive macro automatically derives the trait `solana_program_error::PrintProgramError`.
-
-Your enum must implement the following traits in order for this macro to work:
-
-- `Clone`
-- `Debug`
-- `DecodeError<T>` (above)
-- `Eq`
-- `IntoProgramError` (above)
-- `thiserror::Error`
-- `num_derive::FromPrimitive`
-- `PartialEq`
-
-Sample code:
-
-```rust
-/// Example error
-#[derive(
-    Clone,
-    Debug,
-    DecodeError,
-    Eq,
-    IntoProgramError,
-    thiserror::Error,
-    num_derive::FromPrimitive,
+    num_enum::TryFromPrimitive,
     PartialEq,
 )]
 pub enum ExampleError {
@@ -136,11 +96,13 @@ This procedural macro will give you all of the required implementations out of t
 - `Eq`
 - `thiserror::Error`
 - `num_derive::FromPrimitive`
+- `num_enum::TryFromPrimitive`
 - `PartialEq`
 
 It also imports the required crates so you don't have to in your program:
 
 - `num_derive`
+- `num_enum`
 - `num_traits`
 - `thiserror`
 
@@ -266,27 +228,11 @@ impl From<ExampleError> for solana_program_error::ProgramError {
         solana_program_error::ProgramError::Custom(e as u32)
     }
 }
-impl<T> solana_decode_error::DecodeError<T> for ExampleError {
-    fn type_of() -> &'static str {
-        "ExampleError"
-    }
-}
-impl solana_program_error::PrintProgramError for ExampleError {
-    fn print<E>(&self)
-    where
-        E: 'static + std::error::Error + solana_decode_error::DecodeError<E>
-            + solana_program_error::PrintProgramError
-            + num_traits::FromPrimitive,
-    {
+impl solana_program_error::ToStr for ExampleError {
+    fn to_str<E>(&self) -> &'static str {
         match self {
-            ExampleError::MintHasNoMintAuthority => {
-                ::solana_msg::sol_log("Mint has no mint authority")
-            }
-            ExampleError::IncorrectMintAuthority => {
-                ::solana_msg::sol_log(
-                    "Incorrect mint authority has signed the instruction",
-                )
-            }
+            ExampleError::MintHasNoMintAuthority => "Mint has no mint authority",
+            ExampleError::IncorrectMintAuthority => "Incorrect mint authority has signed the instruction",
         }
     }
 }

@@ -17,8 +17,6 @@ pub struct SplProgramErrorArgs {
     pub hash_error_code_start: Option<u32>,
     /// Crate to use for solana_program_error
     pub program_error_import: SolanaProgramError,
-    /// Crate to use for solana_decode_error
-    pub decode_error_import: SolanaDecodeError,
 }
 
 /// Struct representing the path to a `solana_program_error` crate, which may
@@ -50,40 +48,10 @@ impl Default for SolanaProgramError {
     }
 }
 
-/// Struct representing the path to a `solana_decode_error` crate, which may
-/// be renamed or otherwise.
-pub struct SolanaDecodeError {
-    import: Ident,
-    explicit: bool,
-}
-impl quote::ToTokens for SolanaDecodeError {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.import.to_tokens(tokens);
-    }
-}
-impl SolanaDecodeError {
-    pub fn wrap(&self, output: TokenStream) -> TokenStream {
-        if self.explicit {
-            output
-        } else {
-            decode_error_anon_const_trick(output)
-        }
-    }
-}
-impl Default for SolanaDecodeError {
-    fn default() -> Self {
-        Self {
-            import: Ident::new("_solana_decode_error", Span::call_site()),
-            explicit: false,
-        }
-    }
-}
-
 impl Parse for SplProgramErrorArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut hash_error_code_start = None;
         let mut program_error_import = None;
-        let mut decode_error_import = None;
         while !input.is_empty() {
             match SplProgramErrorArgParser::parse(input)? {
                 SplProgramErrorArgParser::HashErrorCodes { value, .. } => {
@@ -95,18 +63,11 @@ impl Parse for SplProgramErrorArgs {
                         explicit: true,
                     });
                 }
-                SplProgramErrorArgParser::SolanaDecodeErrorCrate { value, .. } => {
-                    decode_error_import = Some(SolanaDecodeError {
-                        import: value.parse()?,
-                        explicit: true,
-                    });
-                }
             }
         }
         Ok(Self {
             hash_error_code_start,
             program_error_import: program_error_import.unwrap_or(SolanaProgramError::default()),
-            decode_error_import: decode_error_import.unwrap_or(SolanaDecodeError::default()),
         })
     }
 }
@@ -120,11 +81,6 @@ enum SplProgramErrorArgParser {
         _comma: Option<Comma>,
     },
     SolanaProgramErrorCrate {
-        _equals_sign: Token![=],
-        value: LitStr,
-        _comma: Option<Comma>,
-    },
-    SolanaDecodeErrorCrate {
         _equals_sign: Token![=],
         value: LitStr,
         _comma: Option<Comma>,
@@ -155,17 +111,10 @@ impl Parse for SplProgramErrorArgParser {
                     _comma,
                 })
             }
-            "solana_decode_error" => {
-                let _equals_sign = input.parse::<Token![=]>()?;
-                let value = input.parse::<LitStr>()?;
-                let _comma: Option<Comma> = input.parse().unwrap_or(None);
-                Ok(Self::SolanaDecodeErrorCrate {
-                    _equals_sign,
-                    value,
-                    _comma,
-                })
+            _ => {
+                Err(input
+                    .error("Expected argument 'hash_error_code_start', 'solana_program_error'"))
             }
-            _ => Err(input.error("Expected argument 'hash_error_code_start', 'solana_program_error', or 'solana_decode_error'")),
         }
     }
 }
@@ -194,16 +143,6 @@ fn program_error_anon_const_trick(exp: TokenStream) -> TokenStream {
     quote! {
         const _: () = {
             extern crate solana_program_error as _solana_program_error;
-            #exp
-        };
-    }
-}
-
-// Same thing, but for solana_decode_error
-fn decode_error_anon_const_trick(exp: TokenStream) -> TokenStream {
-    quote! {
-        const _: () = {
-            extern crate solana_decode_error as _solana_decode_error;
             #exp
         };
     }
