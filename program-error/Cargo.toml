@@ -9,10 +9,11 @@ edition = "2021"
 
 [dependencies]
 num-derive = "0.4"
+num_enum = "0.7"
 num-traits = "0.2"
 solana-decode-error = "2.2.1"
 solana-msg = "2.2.1"
-solana-program-error = "2.2.1"
+solana-program-error = "2.2.2"
 spl-program-error-derive = { version = "0.5.0", path = "./derive" }
 thiserror = "2.0"
 

@@ -1,12 +1,17 @@
 //! Error types
-use {
-    solana_msg::msg,
-    solana_program_error::{PrintProgramError, ProgramError},
-};
+use solana_program_error::{ProgramError, ToStr};
 
 /// Errors that may be returned by the Token program.
 #[repr(u32)]
-#[derive(Clone, Debug, Eq, thiserror::Error, num_derive::FromPrimitive, PartialEq)]
+#[derive(
+    Clone,
+    Debug,
+    Eq,
+    thiserror::Error,
+    num_enum::TryFromPrimitive,
+    num_derive::FromPrimitive,
+    PartialEq,
+)]
 pub enum TlvError {
     /// Type not found in TLV data
     #[error("Type not found in TLV data")]
@@ -22,18 +27,11 @@ impl From<TlvError> for ProgramError {
     }
 }
 
-impl PrintProgramError for TlvError {
-    fn print<E>(&self)
-    where
-        E: 'static + std::error::Error + PrintProgramError + num_traits::FromPrimitive,
-    {
+impl ToStr for TlvError {
+    fn to_str<E>(&self) -> &'static str {
         match self {
-            TlvError::TypeNotFound => {
-                msg!("Type not found in TLV data")
-            }
-            TlvError::TypeAlreadyExists => {
-                msg!("Type already exists in TLV data")
-            }
+            TlvError::TypeNotFound => "Type not found in TLV data",
+            TlvError::TypeAlreadyExists => "Type already exists in TLV data",
         }
     }
 }

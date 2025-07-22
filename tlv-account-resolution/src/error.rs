@@ -1,13 +1,18 @@
 //! Error types
 
-use {
-    solana_msg::msg,
-    solana_program_error::{PrintProgramError, ProgramError},
-};
+use solana_program_error::{ProgramError, ToStr};
 
 /// Errors that may be returned by the Account Resolution library.
 #[repr(u32)]
-#[derive(Clone, Debug, Eq, thiserror::Error, num_derive::FromPrimitive, PartialEq)]
+#[derive(
+    Clone,
+    Debug,
+    Eq,
+    thiserror::Error,
+    num_enum::TryFromPrimitive,
+    num_derive::FromPrimitive,
+    PartialEq,
+)]
 pub enum AccountResolutionError {
     /// Incorrect account provided
     #[error("Incorrect account provided")]
@@ -81,73 +86,68 @@ impl From<AccountResolutionError> for ProgramError {
     }
 }
 
-impl PrintProgramError for AccountResolutionError {
-    fn print<E>(&self)
-    where
-        E: 'static + std::error::Error + PrintProgramError + num_traits::FromPrimitive,
-    {
+impl ToStr for AccountResolutionError {
+    fn to_str<E>(&self) -> &'static str {
         match self {
             AccountResolutionError::IncorrectAccount => {
-                msg!("Incorrect account provided")
+                "Incorrect account provided"
             }
             AccountResolutionError::NotEnoughAccounts => {
-                msg!("Not enough accounts provided")
+                "Not enough accounts provided"
             }
             AccountResolutionError::TlvUninitialized => {
-                msg!("No value initialized in TLV data")
+                "No value initialized in TLV data"
             }
             AccountResolutionError::TlvInitialized => {
-                msg!("Some value initialized in TLV data")
+                "Some value initialized in TLV data"
             }
             AccountResolutionError::TooManyPubkeys => {
-                msg!("Too many pubkeys provided")
+                "Too many pubkeys provided"
             }
             AccountResolutionError::InvalidPubkey => {
-                msg!("Failed to parse `Pubkey` from bytes")
+                "Failed to parse `Pubkey` from bytes"
             }
             AccountResolutionError::AccountTypeNotAccountMeta => {
-                msg!(
-                    "Attempted to deserialize an `AccountMeta` but the underlying type has PDA configs rather than a fixed address",
-                )
+                "Attempted to deserialize an `AccountMeta` but the underlying type has PDA configs rather than a fixed address"
             }
             AccountResolutionError::SeedConfigsTooLarge => {
-                msg!("Provided list of seed configurations too large for a validation account",)
+                "Provided list of seed configurations too large for a validation account"
             }
             AccountResolutionError::NotEnoughBytesForSeed => {
-                msg!("Not enough bytes available to pack seed configuration",)
+                "Not enough bytes available to pack seed configuration"
             }
             AccountResolutionError::InvalidBytesForSeed => {
-                msg!("The provided bytes are not valid for a seed configuration",)
+                "The provided bytes are not valid for a seed configuration"
             }
             AccountResolutionError::InvalidSeedConfig => {
-                msg!("Tried to pack an invalid seed configuration",)
+                "Tried to pack an invalid seed configuration"
             }
             AccountResolutionError::InstructionDataTooSmall => {
-                msg!("Instruction data too small for seed configuration",)
+                "Instruction data too small for seed configuration"
             }
             AccountResolutionError::AccountNotFound => {
-                msg!("Could not find account at specified index",)
+                "Could not find account at specified index"
             }
             AccountResolutionError::CalculationFailure => {
-                msg!("Error in checked math operation")
+                "Error in checked math operation"
             }
             AccountResolutionError::AccountDataNotFound => {
-                msg!("Could not find account data at specified index",)
+                "Could not find account data at specified index"
             }
             AccountResolutionError::AccountDataTooSmall => {
-                msg!("Account data too small for requested seed configuration",)
+                "Account data too small for requested seed configuration"
             }
             AccountResolutionError::AccountFetchFailed => {
-                msg!("Failed to fetch account")
+                "Failed to fetch account"
             }
             AccountResolutionError::NotEnoughBytesForPubkeyData => {
-                msg!("Not enough bytes available to pack pubkey data configuration",)
+                "Not enough bytes available to pack pubkey data configuration"
             }
             AccountResolutionError::InvalidBytesForPubkeyData => {
-                msg!("The provided bytes are not valid for a pubkey data configuration",)
+                "The provided bytes are not valid for a pubkey data configuration"
             }
             AccountResolutionError::InvalidPubkeyDataConfig => {
-                msg!("Tried to pack an invalid pubkey data configuration",)
+                "Tried to pack an invalid pubkey data configuration"
             }
         }
     }

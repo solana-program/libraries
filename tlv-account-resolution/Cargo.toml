@@ -14,13 +14,13 @@ test-sbf = []
 [dependencies]
 bytemuck = { version = "1.23.1", features = ["derive"] }
 num-derive = "0.4"
+num_enum = "0.7"
 num-traits = "0.2"
 serde = { version = "1.0.219", optional = true }
 solana-account-info = "2.2.1"
 solana-decode-error = "2.2.1"
 solana-instruction = { version = "2.2.1", features = ["std"] }
-solana-program-error = "2.2.1"
-solana-msg = "2.2.1"
+solana-program-error = "2.2.2"
 solana-pubkey = { version = "2.2.1", features = ["curve25519"] }
 spl-discriminator = { version = "0.4.0", path = "../discriminator" }
 spl-program-error = { version = "0.7.0", path = "../program-error" }

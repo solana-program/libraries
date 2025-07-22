@@ -89,20 +89,3 @@ enum ExampleSolanaProgramError {
 fn test_macros_compile_with_solana_program_error_crate() {
     let _ = ExampleSolanaProgramError::VeryInformativeError;
 }
-
-/// Example error with solana_decode_error crate set
-#[spl_program_error(solana_decode_error = "solana_decode_error")]
-enum ExampleSolanaDecodeError {
-    /// This is a very informative error
-    #[error("This is a very informative error")]
-    VeryInformativeError,
-    /// This is a super important error
-    #[error("This is a super important error")]
-    SuperImportantError,
-}
-
-/// Tests that all macros compile
-#[test]
-fn test_macros_compile_with_solana_decode_error_crate() {
-    let _ = ExampleSolanaDecodeError::VeryInformativeError;
-}

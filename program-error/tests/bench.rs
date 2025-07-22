@@ -17,26 +17,13 @@ impl From<ExampleError> for solana_program_error::ProgramError {
         solana_program_error::ProgramError::Custom(e as u32)
     }
 }
-impl<T> solana_decode_error::DecodeError<T> for ExampleError {
-    fn type_of() -> &'static str {
-        "ExampleError"
-    }
-}
 
-impl solana_program_error::PrintProgramError for ExampleError {
-    fn print<E>(&self)
-    where
-        E: 'static
-            + std::error::Error
-            + solana_program_error::PrintProgramError
-            + num_traits::FromPrimitive,
-    {
+impl solana_program_error::ToStr for ExampleError {
+    fn to_str<E>(&self) -> &'static str {
         match self {
-            ExampleError::MintHasNoMintAuthority => {
-                solana_msg::msg!("Mint has no mint authority")
-            }
+            ExampleError::MintHasNoMintAuthority => "Mint has no mint authority",
             ExampleError::IncorrectMintAuthority => {
-                solana_msg::msg!("Incorrect mint authority has signed the instruction")
+                "Incorrect mint authority has signed the instruction"
             }
         }
     }
