@@ -14,6 +14,7 @@ pub struct ListViewReadOnly<'data, T: Pod, L: PodLength = PodU64> {
 
 impl<T: Pod, L: PodLength> ListViewable for ListViewReadOnly<'_, T, L> {
     type Item = T;
+    type Length = L;
 
     fn len(&self) -> usize {
         (*self.length).into()
@@ -152,5 +153,20 @@ mod tests {
         assert_eq!(view.len(), 2);
         assert_eq!(view.capacity(), 4);
         assert_eq!(view.as_slice(), &items[..]);
+    }
+
+    #[test]
+    fn test_bytes_used_and_allocated() {
+        // 3 live elements, capacity 5
+        let items = [10u32, 20, 30];
+        let capacity = 5;
+        let buffer = build_test_buffer::<u32, PodU64>(items.len(), capacity, &items);
+        let view = ListView::<u32>::unpack(&buffer).unwrap();
+
+        let expected_used = ListView::<u32>::size_of(view.len()).unwrap();
+        let expected_cap = ListView::<u32>::size_of(view.capacity()).unwrap();
+
+        assert_eq!(view.bytes_used().unwrap(), expected_used);
+        assert_eq!(view.bytes_allocated().unwrap(), expected_cap);
     }
 }

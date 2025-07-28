@@ -61,6 +61,7 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
 
 impl<T: Pod, L: PodLength> ListViewable for ListViewMut<'_, T, L> {
     type Item = T;
+    type Length = L;
 
     fn len(&self) -> usize {
         (*self.length).into()
@@ -81,7 +82,7 @@ mod tests {
         super::*,
         crate::{
             list::{ListView, ListViewable},
-            primitives::{PodU32, PodU64},
+            primitives::{PodU16, PodU32, PodU64},
         },
         bytemuck_derive::{Pod, Zeroable},
     };
@@ -302,5 +303,35 @@ mod tests {
 
         // Verify the size of the length field.
         assert_eq!(size_of_val(view.length), size_of::<PodU64>());
+    }
+
+    #[test]
+    fn test_bytes_used_and_allocated_mut() {
+        // capacity 3, start empty
+        let mut buffer = vec![];
+        let mut view = init_view_mut::<TestStruct, PodU16>(&mut buffer, 3);
+
+        // Empty view
+        assert_eq!(
+            view.bytes_used().unwrap(),
+            ListView::<TestStruct, PodU32>::size_of(0).unwrap()
+        );
+        assert_eq!(
+            view.bytes_allocated().unwrap(),
+            ListView::<TestStruct, PodU32>::size_of(view.capacity()).unwrap()
+        );
+
+        // After pushing elements
+        view.push(TestStruct::new(1, 2)).unwrap();
+        view.push(TestStruct::new(3, 4)).unwrap();
+        view.push(TestStruct::new(5, 6)).unwrap();
+        assert_eq!(
+            view.bytes_used().unwrap(),
+            ListView::<TestStruct, PodU32>::size_of(3).unwrap()
+        );
+        assert_eq!(
+            view.bytes_allocated().unwrap(),
+            ListView::<TestStruct, PodU32>::size_of(view.capacity()).unwrap()
+        );
     }
 }
