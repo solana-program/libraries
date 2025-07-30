@@ -67,7 +67,6 @@ fn de_escalate_account_meta(account_meta: &mut AccountMeta, account_metas: &[Acc
 /// ```rust
 /// use {
 ///     futures_util::TryFutureExt,
-///     solana_client::nonblocking::rpc_client::RpcClient,
 ///     solana_account_info::AccountInfo,
 ///     solana_instruction::{AccountMeta, Instruction},
 ///     solana_pubkey::Pubkey,
@@ -120,24 +119,14 @@ fn de_escalate_account_meta(account_meta: &mut AccountMeta, account_metas: &[Acc
 ///
 /// // Off-chain, you can add the additional accounts directly from the account data
 /// // You need to provide the resolver a way to fetch account data off-chain
-/// struct MyClient {
-///     client: RpcClient,
-/// }
+/// struct MyClient;
 /// impl MyClient {
-///     pub fn new() -> Self {
-///         Self {
-///             client: RpcClient::new_mock("succeeds".to_string()),
-///         }
-///     }
 ///     pub async fn get_account_data(&self, address: Pubkey) -> AccountDataResult {
-///         self.client.get_account(&address)
-///             .await
-///             .map(|acct| Some(acct.data))
-///             .map_err(|e| Box::new(e) as AccountFetchError)
+///         Ok(None)
 ///     }
 /// }
 ///
-/// let client = MyClient::new();
+/// let client = MyClient;
 /// let program_id = Pubkey::new_unique();
 /// let mut instruction = Instruction::new_with_bytes(program_id, &[0, 1, 2], vec![]);
 /// # futures::executor::block_on(async {
@@ -372,7 +361,6 @@ mod tests {
         super::*,
         crate::{pubkey_data::PubkeyData, seeds::Seed},
         solana_instruction::AccountMeta,
-        solana_program_test::tokio,
         solana_pubkey::Pubkey,
         spl_discriminator::{ArrayDiscriminator, SplDiscriminate},
         std::collections::HashMap,
