@@ -2,15 +2,14 @@
 
 use {
     crate::{
-        error::PodSliceError, list::list_viewable::ListViewable, pod_length::PodLength,
-        primitives::PodU64,
+        error::PodSliceError, list::list_trait::List, pod_length::PodLength, primitives::PodU32,
     },
     bytemuck::Pod,
     solana_program_error::ProgramError,
 };
 
 #[derive(Debug)]
-pub struct ListViewMut<'data, T: Pod, L: PodLength = PodU64> {
+pub struct ListViewMut<'data, T: Pod, L: PodLength = PodU32> {
     pub(crate) length: &'data mut L,
     pub(crate) data: &'data mut [T],
     pub(crate) capacity: usize,
@@ -46,8 +45,8 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
         self.data.copy_within(tail_start..len, index);
 
         // Store the new length (len - 1)
-        let last = len.saturating_sub(1);
-        *self.length = L::try_from(last)?;
+        let new_len = len.checked_sub(1).unwrap();
+        *self.length = L::try_from(new_len)?;
 
         Ok(removed_item)
     }
@@ -59,7 +58,7 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
     }
 }
 
-impl<T: Pod, L: PodLength> ListViewable for ListViewMut<'_, T, L> {
+impl<T: Pod, L: PodLength> List for ListViewMut<'_, T, L> {
     type Item = T;
     type Length = L;
 
@@ -81,7 +80,7 @@ mod tests {
     use {
         super::*,
         crate::{
-            list::{ListView, ListViewable},
+            list::{List, ListView},
             primitives::{PodU16, PodU32, PodU64},
         },
         bytemuck_derive::{Pod, Zeroable},
@@ -302,7 +301,7 @@ mod tests {
         assert_eq!(view.len(), 0);
 
         // Verify the size of the length field.
-        assert_eq!(size_of_val(view.length), size_of::<PodU64>());
+        assert_eq!(size_of_val(view.length), size_of::<PodU32>());
     }
 
     #[test]

@@ -8,7 +8,7 @@ use {
     solana_pubkey::Pubkey,
     spl_discriminator::SplDiscriminate,
     spl_pod::{
-        list::{self, ListView, ListViewable},
+        list::{self, List, ListView},
         primitives::PodU32,
     },
     spl_type_length_value::state::{TlvState, TlvStateBorrowed, TlvStateMut},
@@ -173,9 +173,9 @@ impl ExtraAccountMetaList {
         extra_account_metas: &[ExtraAccountMeta],
     ) -> Result<(), ProgramError> {
         let mut state = TlvStateMut::unpack(data).unwrap();
-        let tlv_size = ListView::<ExtraAccountMeta, PodU32>::size_of(extra_account_metas.len())?;
+        let tlv_size = ListView::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let (bytes, _) = state.alloc::<T>(tlv_size, false)?;
-        let mut validation_data = ListView::<ExtraAccountMeta, PodU32>::init(bytes)?;
+        let mut validation_data = ListView::<ExtraAccountMeta>::init(bytes)?;
         for meta in extra_account_metas {
             validation_data.push(*meta)?;
         }
@@ -189,9 +189,9 @@ impl ExtraAccountMetaList {
         extra_account_metas: &[ExtraAccountMeta],
     ) -> Result<(), ProgramError> {
         let mut state = TlvStateMut::unpack(data).unwrap();
-        let tlv_size = ListView::<ExtraAccountMeta, PodU32>::size_of(extra_account_metas.len())?;
+        let tlv_size = ListView::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let bytes = state.realloc_first::<T>(tlv_size)?;
-        let mut validation_data = ListView::<ExtraAccountMeta, PodU32>::init(bytes)?;
+        let mut validation_data = ListView::<ExtraAccountMeta>::init(bytes)?;
         for meta in extra_account_metas {
             validation_data.push(*meta)?;
         }
@@ -207,13 +207,13 @@ impl ExtraAccountMetaList {
         tlv_state: &'a TlvStateBorrowed,
     ) -> Result<list::ListViewReadOnly<'a, ExtraAccountMeta, PodU32>, ProgramError> {
         let bytes = tlv_state.get_first_bytes::<T>()?;
-        ListView::<ExtraAccountMeta, PodU32>::unpack(bytes)
+        ListView::<ExtraAccountMeta>::unpack(bytes)
     }
 
     /// Get the byte size required to hold `num_items` items
     pub fn size_of(num_items: usize) -> Result<usize, ProgramError> {
         Ok(TlvStateBorrowed::get_base_len()
-            .saturating_add(ListView::<ExtraAccountMeta, PodU32>::size_of(num_items)?))
+            .saturating_add(ListView::<ExtraAccountMeta>::size_of(num_items)?))
     }
 
     /// Checks provided account infos against validation data, using
@@ -284,7 +284,7 @@ impl ExtraAccountMetaList {
     {
         let state = TlvStateBorrowed::unpack(data)?;
         let bytes = state.get_first_bytes::<T>()?;
-        let extra_account_metas = ListView::<ExtraAccountMeta, PodU32>::unpack(bytes)?;
+        let extra_account_metas = ListView::<ExtraAccountMeta>::unpack(bytes)?;
 
         // Fetch account data for each of the instruction accounts
         let mut account_key_datas = vec![];
@@ -329,7 +329,7 @@ impl ExtraAccountMetaList {
     ) -> Result<(), ProgramError> {
         let state = TlvStateBorrowed::unpack(data)?;
         let bytes = state.get_first_bytes::<T>()?;
-        let extra_account_metas = ListView::<ExtraAccountMeta, PodU32>::unpack(bytes)?;
+        let extra_account_metas = ListView::<ExtraAccountMeta>::unpack(bytes)?;
 
         for extra_meta in extra_account_metas.as_slice().iter() {
             let mut meta = {

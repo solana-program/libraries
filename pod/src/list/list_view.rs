@@ -8,7 +8,7 @@ use {
         error::PodSliceError,
         list::{list_view_mut::ListViewMut, list_view_read_only::ListViewReadOnly},
         pod_length::PodLength,
-        primitives::PodU64,
+        primitives::PodU32,
     },
     bytemuck::Pod,
     solana_program_error::ProgramError,
@@ -35,12 +35,13 @@ use {
 /// The structure assumes the underlying byte buffer is formatted as follows:
 /// 1.  **Length**: A length field of type `L` at the beginning of the buffer,
 ///     indicating the number of currently active elements in the collection.
-///     Defaults to `PodU64` so the offset is then compatible with 1, 2, 4 and 8 bytes.
+///     Defaults to `PodU32`. The implementation uses padding to ensure that the
+///     data is correctly aligned for any `Pod` type.
 /// 2.  **Padding**: Optional padding bytes to ensure proper alignment of the data.
 /// 3.  **Data**: The remaining part of the buffer, which is treated as a slice
 ///     of `T` elements. The capacity of the collection is the number of `T`
 ///     elements that can fit into this data portion.
-pub struct ListView<T: Pod, L: PodLength = PodU64>(PhantomData<(T, L)>);
+pub struct ListView<T: Pod, L: PodLength = PodU32>(PhantomData<(T, L)>);
 
 struct Layout {
     length_range: Range<usize>,
@@ -51,10 +52,11 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     /// Calculate the total byte size for a `ListView` holding `num_items`.
     /// This includes the length prefix, padding, and data.
     pub fn size_of(num_items: usize) -> Result<usize, ProgramError> {
+        let header_padding = Self::header_padding()?;
         size_of::<T>()
             .checked_mul(num_items)
             .and_then(|curr| curr.checked_add(size_of::<L>()))
-            .and_then(|curr| curr.checked_add(Self::header_padding()))
+            .and_then(|curr| curr.checked_add(header_padding))
             .ok_or_else(|| PodSliceError::CalculationFailure.into())
     }
 
@@ -133,7 +135,8 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     #[inline]
     fn calculate_layout(buf_len: usize) -> Result<Layout, ProgramError> {
         let len_field_end = size_of::<L>();
-        let data_start = len_field_end.saturating_add(Self::header_padding());
+        let header_padding = Self::header_padding()?;
+        let data_start = len_field_end.saturating_add(header_padding);
 
         if buf_len < data_start {
             return Err(PodSliceError::BufferTooSmall.into());
@@ -150,13 +153,18 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     /// The goal is to ensure that the data field `T` starts at a memory offset
     /// that is a multiple of its alignment requirement.
     #[inline]
-    const fn header_padding() -> usize {
+    fn header_padding() -> Result<usize, ProgramError> {
+        // Enforce that the length prefix type `L` itself does not have alignment requirements
+        if align_of::<L>() != 1 {
+            return Err(ProgramError::InvalidArgument);
+        }
+
         let length_size = size_of::<L>();
         let data_align = align_of::<T>();
 
         // No padding is needed for alignments of 0 or 1
         if data_align == 0 || data_align == 1 {
-            return 0;
+            return Ok(0);
         }
 
         // Find how many bytes `length_size` extends past an alignment boundary
@@ -166,9 +174,9 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
         // If already aligned (remainder is 0), no padding is needed.
         // Otherwise, calculate the distance to the next alignment boundary.
         if remainder == 0 {
-            0
+            Ok(0)
         } else {
-            data_align.wrapping_sub(remainder)
+            Ok(data_align.wrapping_sub(remainder))
         }
     }
 }
@@ -178,8 +186,8 @@ mod tests {
     use {
         super::*,
         crate::{
-            list::ListViewable,
-            primitives::{PodU16, PodU32},
+            list::List,
+            primitives::{PodU16, PodU32, PodU64},
         },
         bytemuck_derive::{Pod as DerivePod, Zeroable},
     };
@@ -191,14 +199,14 @@ mod tests {
         assert_eq!(ListView::<u8, PodU32>::size_of(10).unwrap(), 14);
 
         // Case 2: size_of<L> is a multiple of align_of<T>, so no padding needed.
-        // T = u32 (size 4, align 4), L = PodU64 (size 8). 8 % 4 == 0.
-        // 10 items * 4 bytes/item + 8 bytes for length = 48
-        assert_eq!(ListView::<u32>::size_of(10).unwrap(), 48);
+        // T = u32 (size 4, align 4), L = PodU32 (size 4). 4 % 4 == 0.
+        // 10 items * 4 bytes/item + 4 bytes for length = 44
+        assert_eq!(ListView::<u32>::size_of(10).unwrap(), 44);
 
         // Case 3: 0 items. Size should just be size_of<L> + padding.
         // Padding is 0 here.
-        // 0 items * 4 bytes/item + 8 bytes for length = 8
-        assert_eq!(ListView::<u32>::size_of(0).unwrap(), 8);
+        // 0 items * 4 bytes/item + 4 bytes for length = 4
+        assert_eq!(ListView::<u32>::size_of(0).unwrap(), 4);
     }
 
     #[test]
@@ -241,26 +249,58 @@ mod tests {
     }
 
     #[test]
+    fn test_fails_with_non_aligned_length_type() {
+        // A custom `PodLength` type with an alignment of 4
+        #[repr(C, align(4))]
+        #[derive(Debug, Copy, Clone, Zeroable, DerivePod)]
+        struct TestPodU32(u32);
+
+        // Implement the traits for `PodLength`
+        impl From<TestPodU32> for usize {
+            fn from(val: TestPodU32) -> Self {
+                val.0 as usize
+            }
+        }
+        impl TryFrom<usize> for TestPodU32 {
+            type Error = PodSliceError;
+            fn try_from(val: usize) -> Result<Self, Self::Error> {
+                Ok(Self(u32::try_from(val)?))
+            }
+        }
+
+        let mut buf = [0u8; 100];
+
+        let err_size_of = ListView::<u8, TestPodU32>::size_of(10).unwrap_err();
+        assert_eq!(err_size_of, ProgramError::InvalidArgument);
+
+        let err_unpack = ListView::<u8, TestPodU32>::unpack(&buf).unwrap_err();
+        assert_eq!(err_unpack, ProgramError::InvalidArgument);
+
+        let err_init = ListView::<u8, TestPodU32>::init(&mut buf).unwrap_err();
+        assert_eq!(err_init, ProgramError::InvalidArgument);
+    }
+
+    #[test]
     fn test_padding_calculation() {
         // `u8` has an alignment of 1, so no padding is ever needed.
-        assert_eq!(ListView::<u8, PodU32>::header_padding(), 0);
+        assert_eq!(ListView::<u8, PodU32>::header_padding().unwrap(), 0);
 
         // Zero-Sized Types like `()` have size 0 and align 1, requiring no padding.
-        assert_eq!(ListView::<(), PodU64>::header_padding(), 0);
+        assert_eq!(ListView::<(), PodU64>::header_padding().unwrap(), 0);
 
         // When length and data have the same alignment.
-        assert_eq!(ListView::<u16, PodU16>::header_padding(), 0);
-        assert_eq!(ListView::<u32, PodU32>::header_padding(), 0);
-        assert_eq!(ListView::<u64, PodU64>::header_padding(), 0);
+        assert_eq!(ListView::<u16, PodU16>::header_padding().unwrap(), 0);
+        assert_eq!(ListView::<u32, PodU32>::header_padding().unwrap(), 0);
+        assert_eq!(ListView::<u64, PodU64>::header_padding().unwrap(), 0);
 
         // When data alignment is smaller than or perfectly divides the length size.
-        assert_eq!(ListView::<u16, PodU64>::header_padding(), 0); // 8 % 2 = 0
-        assert_eq!(ListView::<u32, PodU64>::header_padding(), 0); // 8 % 4 = 0
+        assert_eq!(ListView::<u16, PodU64>::header_padding().unwrap(), 0); // 8 % 2 = 0
+        assert_eq!(ListView::<u32, PodU64>::header_padding().unwrap(), 0); // 8 % 4 = 0
 
         // When padding IS needed.
-        assert_eq!(ListView::<u32, PodU16>::header_padding(), 2); // size_of<PodU16> is 2. To align to 4, need 2 bytes.
-        assert_eq!(ListView::<u64, PodU16>::header_padding(), 6); // size_of<PodU16> is 2. To align to 8, need 6 bytes.
-        assert_eq!(ListView::<u64, PodU32>::header_padding(), 4); // size_of<PodU32> is 4. To align to 8, need 4 bytes.
+        assert_eq!(ListView::<u32, PodU16>::header_padding().unwrap(), 2); // size_of<PodU16> is 2. To align to 4, need 2 bytes.
+        assert_eq!(ListView::<u64, PodU16>::header_padding().unwrap(), 6); // size_of<PodU16> is 2. To align to 8, need 6 bytes.
+        assert_eq!(ListView::<u64, PodU32>::header_padding().unwrap(), 4); // size_of<PodU32> is 4. To align to 8, need 4 bytes.
 
         // Test with custom, higher alignments.
         #[repr(C, align(8))]
@@ -268,17 +308,17 @@ mod tests {
         struct Align8(u64);
 
         // Test against different length types
-        assert_eq!(ListView::<Align8, PodU16>::header_padding(), 6); // 2 + 6 = 8
-        assert_eq!(ListView::<Align8, PodU32>::header_padding(), 4); // 4 + 4 = 8
-        assert_eq!(ListView::<Align8, PodU64>::header_padding(), 0); // 8 is already aligned
+        assert_eq!(ListView::<Align8, PodU16>::header_padding().unwrap(), 6); // 2 + 6 = 8
+        assert_eq!(ListView::<Align8, PodU32>::header_padding().unwrap(), 4); // 4 + 4 = 8
+        assert_eq!(ListView::<Align8, PodU64>::header_padding().unwrap(), 0); // 8 is already aligned
 
         #[repr(C, align(16))]
         #[derive(DerivePod, Zeroable, Copy, Clone)]
         struct Align16(u128);
 
-        assert_eq!(ListView::<Align16, PodU16>::header_padding(), 14); // 2 + 14 = 16
-        assert_eq!(ListView::<Align16, PodU32>::header_padding(), 12); // 4 + 12 = 16
-        assert_eq!(ListView::<Align16, PodU64>::header_padding(), 8); // 8 + 8 = 16
+        assert_eq!(ListView::<Align16, PodU16>::header_padding().unwrap(), 14); // 2 + 14 = 16
+        assert_eq!(ListView::<Align16, PodU32>::header_padding().unwrap(), 12); // 4 + 12 = 16
+        assert_eq!(ListView::<Align16, PodU64>::header_padding().unwrap(), 8); // 8 + 8 = 16
     }
 
     #[test]
@@ -313,7 +353,7 @@ mod tests {
     #[test]
     fn test_unpack_success_with_padding() {
         // T = u64 (align 8), L = PodU32 (size 4, align 4). Needs 4 bytes padding.
-        let padding = ListView::<u64, PodU32>::header_padding();
+        let padding = ListView::<u64, PodU32>::header_padding().unwrap();
         assert_eq!(padding, 4);
 
         let length: u32 = 2;
@@ -398,7 +438,7 @@ mod tests {
     #[test]
     fn test_unpack_success_different_length_type() {
         // T = u64 (align 8), L = PodU16 (size 2, align 2). Needs 6 bytes padding.
-        let padding = ListView::<u64, PodU16>::header_padding();
+        let padding = ListView::<u64, PodU16>::header_padding().unwrap();
         assert_eq!(padding, 6);
 
         let length: u16 = 1;
@@ -564,10 +604,10 @@ mod tests {
 
     #[test]
     fn test_init_success_default_length_type() {
-        // This test uses the default L=PodU64 length type by omitting it.
-        // T = u32 (align 4), L = PodU64 (size 8). No padding needed as 8 % 4 == 0.
+        // This test uses the default L=PodU32 length type by omitting it.
+        // T = u32 (align 4), L = PodU32 (size 4). No padding needed as 4 % 4 == 0.
         let capacity = 5;
-        let len_size = size_of::<PodU64>(); // Default L is PodU64
+        let len_size = size_of::<PodU32>(); // Default L is PodU32
         let buf_size = ListView::<u32>::size_of(capacity).unwrap();
         let mut buf = vec![0xFFu8; buf_size]; // Pre-fill to ensure init zeroes it
 
@@ -577,8 +617,8 @@ mod tests {
         assert_eq!(view.capacity(), capacity);
         assert!(view.is_empty());
 
-        // Check that the underlying buffer's length (a u64) was actually zeroed
+        // Check that the underlying buffer's length (a u32) was actually zeroed
         let length_bytes = &buf[0..len_size];
-        assert_eq!(length_bytes, &[0u8; 8]);
+        assert_eq!(length_bytes, &[0u8; 4]);
     }
 }

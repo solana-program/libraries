@@ -1,18 +1,18 @@
 //! `ListViewReadOnly`, a read-only, compact, zero-copy array wrapper.
 
 use {
-    crate::{list::list_viewable::ListViewable, pod_length::PodLength, primitives::PodU64},
+    crate::{list::list_trait::List, pod_length::PodLength, primitives::PodU32},
     bytemuck::Pod,
 };
 
 #[derive(Debug)]
-pub struct ListViewReadOnly<'data, T: Pod, L: PodLength = PodU64> {
+pub struct ListViewReadOnly<'data, T: Pod, L: PodLength = PodU32> {
     pub(crate) length: &'data L,
     pub(crate) data: &'data [T],
     pub(crate) capacity: usize,
 }
 
-impl<T: Pod, L: PodLength> ListViewable for ListViewReadOnly<'_, T, L> {
+impl<T: Pod, L: PodLength> List for ListViewReadOnly<'_, T, L> {
     type Item = T;
     type Length = L;
 
@@ -33,7 +33,11 @@ impl<T: Pod, L: PodLength> ListViewable for ListViewReadOnly<'_, T, L> {
 mod tests {
     use {
         super::*,
-        crate::{list::ListView, pod_length::PodLength, primitives::PodU32},
+        crate::{
+            list::ListView,
+            pod_length::PodLength,
+            primitives::{PodU32, PodU64},
+        },
         bytemuck_derive::{Pod as DerivePod, Zeroable},
         std::mem::size_of,
     };
@@ -70,7 +74,7 @@ mod tests {
     #[test]
     fn test_len_and_capacity() {
         let items = [10u32, 20, 30];
-        let buffer = build_test_buffer::<u32, PodU64>(items.len(), 5, &items);
+        let buffer = build_test_buffer::<u32, PodU32>(items.len(), 5, &items);
         let view = ListView::<u32>::unpack(&buffer).unwrap();
 
         assert_eq!(view.len(), 3);
@@ -92,12 +96,12 @@ mod tests {
     #[test]
     fn test_is_empty() {
         // Not empty
-        let buffer_full = build_test_buffer::<u32, PodU64>(1, 2, &[10]);
+        let buffer_full = build_test_buffer::<u32, PodU32>(1, 2, &[10]);
         let view_full = ListView::<u32>::unpack(&buffer_full).unwrap();
         assert!(!view_full.is_empty());
 
         // Empty
-        let buffer_empty = build_test_buffer::<u32, PodU64>(0, 2, &[]);
+        let buffer_empty = build_test_buffer::<u32, PodU32>(0, 2, &[]);
         let view_empty = ListView::<u32>::unpack(&buffer_empty).unwrap();
         assert!(view_empty.is_empty());
     }
@@ -146,7 +150,7 @@ mod tests {
         assert_eq!(header_size, 16);
 
         let items = [TestStruct(123), TestStruct(456)];
-        let buffer = build_test_buffer::<TestStruct, PodU64>(items.len(), 4, &items);
+        let buffer = build_test_buffer::<TestStruct, PodU32>(items.len(), 4, &items);
         let view = ListView::<TestStruct>::unpack(&buffer).unwrap();
 
         // Check if the public API works as expected despite internal padding
@@ -160,7 +164,7 @@ mod tests {
         // 3 live elements, capacity 5
         let items = [10u32, 20, 30];
         let capacity = 5;
-        let buffer = build_test_buffer::<u32, PodU64>(items.len(), capacity, &items);
+        let buffer = build_test_buffer::<u32, PodU32>(items.len(), capacity, &items);
         let view = ListView::<u32>::unpack(&buffer).unwrap();
 
         let expected_used = ListView::<u32>::size_of(view.len()).unwrap();

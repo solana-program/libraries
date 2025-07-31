@@ -28,7 +28,8 @@ macro_rules! impl_pod_length_for {
         impl From<$PodType> for usize {
             fn from(pod_val: $PodType) -> Self {
                 let primitive_val = <$PrimitiveType>::from(pod_val);
-                primitive_val as usize
+                Self::try_from(primitive_val)
+                    .expect("value out of range for usize on this platform")
             }
         }
     };

@@ -7,7 +7,7 @@ use {
 
 /// A trait to abstract the shared, read-only behavior
 /// between `ListViewReadOnly` and `ListViewMut`.
-pub trait ListViewable {
+pub trait List {
     /// The type of the items stored in the list.
     type Item: Pod;
     /// Length prefix type used (`PodU16`, `PodU32`, …).
