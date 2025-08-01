@@ -9,7 +9,6 @@ edition = "2021"
 
 [features]
 serde-traits = ["dep:serde"]
-test-sbf = []
 
 [dependencies]
 bytemuck = { version = "1.23.1", features = ["derive"] }
@@ -31,9 +30,7 @@ thiserror = "2.0"
 [dev-dependencies]
 futures = "0.3.31"
 futures-util = "0.3"
-solana-client = "2.2.0"
-solana-program-test = "2.2.0"
-solana-sdk = "2.2.1"
+tokio = { version = "1", features = ["rt", "macros"] }
 
 [lib]
 crate-type = ["cdylib", "lib"]
