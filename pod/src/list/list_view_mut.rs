@@ -53,8 +53,35 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
 
     /// Returns a mutable iterator over the current elements
     pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
+        self.as_mut_slice().iter_mut()
+    }
+
+    /// Returns a mutable reference to an element at a given index.
+    /// Returns `None` if the index is out of bounds of the current length.
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.as_mut_slice().get_mut(index)
+    }
+
+    /// Returns a mutable slice of the items currently in the list
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
         let len = (*self.length).into();
-        self.data[..len].iter_mut()
+        &mut self.data[..len]
+    }
+
+    /// Sorts the list (stable). Requires `T` to implement `Ord`.
+    pub fn sort(&mut self)
+    where
+        T: Ord,
+    {
+        self.as_mut_slice().sort();
+    }
+
+    /// Sorts the list (stable) using a comparison function
+    pub fn sort_by<F>(&mut self, compare: F)
+    where
+        F: FnMut(&T, &T) -> std::cmp::Ordering,
+    {
+        self.as_mut_slice().sort_by(compare);
     }
 }
 
@@ -87,7 +114,7 @@ mod tests {
     };
 
     #[repr(C)]
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Pod, Zeroable)]
     struct TestStruct {
         a: u64,
         b: u32,
@@ -332,5 +359,95 @@ mod tests {
             view.bytes_allocated().unwrap(),
             ListView::<TestStruct, PodU32>::size_of(view.capacity()).unwrap()
         );
+    }
+    #[test]
+    fn test_get_and_get_mut() {
+        let mut buffer = vec![];
+        let mut view = init_view_mut::<TestStruct, PodU32>(&mut buffer, 3);
+
+        let item0 = TestStruct::new(1, 10);
+        let item1 = TestStruct::new(2, 20);
+        view.push(item0).unwrap();
+        view.push(item1).unwrap();
+
+        // Test get()
+        assert_eq!(view.get(0), Some(&item0));
+        assert_eq!(view.get(1), Some(&item1));
+        assert_eq!(view.get(2), None); // out of bounds
+        assert_eq!(view.get(100), None); // way out of bounds
+
+        // Test get_mut() to modify an item
+        let modified_item0 = TestStruct::new(111, 110);
+        let item_ref = view.get_mut(0).unwrap();
+        *item_ref = modified_item0;
+
+        // Verify the modification
+        assert_eq!(view.get(0), Some(&modified_item0));
+        assert_eq!(view.as_slice(), &[modified_item0, item1]);
+
+        // Test get_mut() out of bounds
+        assert_eq!(view.get_mut(2), None);
+    }
+
+    #[test]
+    fn test_as_mut_slice() {
+        let mut buffer = vec![];
+        let mut view = init_view_mut::<TestStruct, PodU32>(&mut buffer, 3);
+
+        let item0 = TestStruct::new(1, 10);
+        let item1 = TestStruct::new(2, 20);
+        view.push(item0).unwrap();
+        view.push(item1).unwrap();
+
+        assert_eq!(view.as_mut_slice().len(), 2);
+
+        // Modify via the mutable slice
+        view.as_mut_slice()[0].a = 99;
+
+        let expected_item0 = TestStruct::new(99, 10);
+        assert_eq!(view.get(0), Some(&expected_item0));
+        assert_eq!(view.as_slice(), &[expected_item0, item1]);
+    }
+
+    #[test]
+    fn test_sort_by() {
+        let mut buffer = vec![];
+        let mut view = init_view_mut::<TestStruct, PodU32>(&mut buffer, 5);
+
+        let item0 = TestStruct::new(5, 1);
+        let item1 = TestStruct::new(2, 2);
+        let item2 = TestStruct::new(5, 3);
+        let item3 = TestStruct::new(1, 4);
+        let item4 = TestStruct::new(2, 5);
+
+        view.push(item0).unwrap();
+        view.push(item1).unwrap();
+        view.push(item2).unwrap();
+        view.push(item3).unwrap();
+        view.push(item4).unwrap();
+
+        // Sort by `b` field in descending order.
+        view.sort_by(|a, b| b.b.cmp(&a.b));
+        let expected_order_by_b_desc = &[
+            item4, // b: 5
+            item3, // b: 4
+            item2, // b: 3
+            item1, // b: 2
+            item0, // b: 1
+        ];
+        assert_eq!(view.as_slice(), expected_order_by_b_desc);
+
+        // Now, sort by `a` in ascending order. A stable sort preserves the relative
+        // order of equal elements from the previous state of the list.
+        view.sort_by(|x, y| x.a.cmp(&y.a));
+
+        let expected_order_by_a_stable = &[
+            item3, // a: 1
+            item4, // a: 2 (was before item1 in the previous state)
+            item1, // a: 2
+            item2, // a: 5 (was before item0 in the previous state)
+            item0, // a: 5
+        ];
+        assert_eq!(view.as_slice(), expected_order_by_a_stable);
     }
 }

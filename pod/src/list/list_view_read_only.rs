@@ -173,4 +173,29 @@ mod tests {
         assert_eq!(view.bytes_used().unwrap(), expected_used);
         assert_eq!(view.bytes_allocated().unwrap(), expected_cap);
     }
+
+    #[test]
+    fn test_get() {
+        let items = [10u32, 20, 30];
+        let buffer = build_test_buffer::<u32, PodU32>(items.len(), 5, &items);
+        let view = ListView::<u32>::unpack(&buffer).unwrap();
+
+        // Get in-bounds elements
+        assert_eq!(view.get(0), Some(&10u32));
+        assert_eq!(view.get(1), Some(&20u32));
+        assert_eq!(view.get(2), Some(&30u32));
+
+        // Get out-of-bounds element (index == len)
+        assert_eq!(view.get(3), None);
+
+        // Get way out-of-bounds
+        assert_eq!(view.get(100), None);
+    }
+
+    #[test]
+    fn test_get_on_empty_list() {
+        let buffer = build_test_buffer::<u32, PodU32>(0, 5, &[]);
+        let view = ListView::<u32, PodU32>::unpack(&buffer).unwrap();
+        assert_eq!(view.get(0), None);
+    }
 }

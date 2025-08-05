@@ -27,6 +27,12 @@ pub trait List {
     /// Returns a read-only slice of the items currently in the list.
     fn as_slice(&self) -> &[Self::Item];
 
+    /// Returns a reference to an element at a given index or `None` if the
+    /// index is out of bounds.
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        self.as_slice().get(index)
+    }
+
     /// Returns a read-only iterator over the list.
     fn iter(&self) -> Iter<'_, Self::Item> {
         self.as_slice().iter()
