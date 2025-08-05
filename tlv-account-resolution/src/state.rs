@@ -7,7 +7,10 @@ use {
     solana_program_error::ProgramError,
     solana_pubkey::Pubkey,
     spl_discriminator::SplDiscriminate,
-    spl_pod::slice::{PodSlice, PodSliceMut},
+    spl_pod::{
+        list::{self, List, ListView},
+        primitives::PodU32,
+    },
     spl_type_length_value::state::{TlvState, TlvStateBorrowed, TlvStateMut},
     std::future::Future,
 };
@@ -159,9 +162,9 @@ impl ExtraAccountMetaList {
         extra_account_metas: &[ExtraAccountMeta],
     ) -> Result<(), ProgramError> {
         let mut state = TlvStateMut::unpack(data).unwrap();
-        let tlv_size = PodSlice::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
+        let tlv_size = ListView::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let (bytes, _) = state.alloc::<T>(tlv_size, false)?;
-        let mut validation_data = PodSliceMut::init(bytes)?;
+        let mut validation_data = ListView::<ExtraAccountMeta>::init(bytes)?;
         for meta in extra_account_metas {
             validation_data.push(*meta)?;
         }
@@ -175,31 +178,31 @@ impl ExtraAccountMetaList {
         extra_account_metas: &[ExtraAccountMeta],
     ) -> Result<(), ProgramError> {
         let mut state = TlvStateMut::unpack(data).unwrap();
-        let tlv_size = PodSlice::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
+        let tlv_size = ListView::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let bytes = state.realloc_first::<T>(tlv_size)?;
-        let mut validation_data = PodSliceMut::init(bytes)?;
+        let mut validation_data = ListView::<ExtraAccountMeta>::init(bytes)?;
         for meta in extra_account_metas {
             validation_data.push(*meta)?;
         }
         Ok(())
     }
 
-    /// Get the underlying `PodSlice<ExtraAccountMeta>` from an unpacked TLV
+    /// Get the underlying `ListViewReadOnly<ExtraAccountMeta>` from an unpacked TLV
     ///
     /// Due to lifetime annoyances, this function can't just take in the bytes,
     /// since then we would be returning a reference to a locally created
     /// `TlvStateBorrowed`. I hope there's a better way to do this!
     pub fn unpack_with_tlv_state<'a, T: SplDiscriminate>(
         tlv_state: &'a TlvStateBorrowed,
-    ) -> Result<PodSlice<'a, ExtraAccountMeta>, ProgramError> {
+    ) -> Result<list::ListViewReadOnly<'a, ExtraAccountMeta, PodU32>, ProgramError> {
         let bytes = tlv_state.get_first_bytes::<T>()?;
-        PodSlice::<ExtraAccountMeta>::unpack(bytes)
+        ListView::<ExtraAccountMeta>::unpack(bytes)
     }
 
     /// Get the byte size required to hold `num_items` items
     pub fn size_of(num_items: usize) -> Result<usize, ProgramError> {
         Ok(TlvStateBorrowed::get_base_len()
-            .saturating_add(PodSlice::<ExtraAccountMeta>::size_of(num_items)?))
+            .saturating_add(ListView::<ExtraAccountMeta>::size_of(num_items)?))
     }
 
     /// Checks provided account infos against validation data, using
@@ -216,7 +219,7 @@ impl ExtraAccountMetaList {
     ) -> Result<(), ProgramError> {
         let state = TlvStateBorrowed::unpack(data).unwrap();
         let extra_meta_list = ExtraAccountMetaList::unpack_with_tlv_state::<T>(&state)?;
-        let extra_account_metas = extra_meta_list.data();
+        let extra_account_metas = extra_meta_list.as_slice();
 
         let initial_accounts_len = account_infos.len() - extra_account_metas.len();
 
@@ -270,7 +273,7 @@ impl ExtraAccountMetaList {
     {
         let state = TlvStateBorrowed::unpack(data)?;
         let bytes = state.get_first_bytes::<T>()?;
-        let extra_account_metas = PodSlice::<ExtraAccountMeta>::unpack(bytes)?;
+        let extra_account_metas = ListView::<ExtraAccountMeta>::unpack(bytes)?;
 
         // Fetch account data for each of the instruction accounts
         let mut account_key_datas = vec![];
@@ -283,7 +286,7 @@ impl ExtraAccountMetaList {
             account_key_datas.push((meta.pubkey, account_data));
         }
 
-        for extra_meta in extra_account_metas.data().iter() {
+        for extra_meta in extra_account_metas.as_slice().iter() {
             let mut meta =
                 extra_meta.resolve(&instruction.data, &instruction.program_id, |usize| {
                     account_key_datas
@@ -315,9 +318,9 @@ impl ExtraAccountMetaList {
     ) -> Result<(), ProgramError> {
         let state = TlvStateBorrowed::unpack(data)?;
         let bytes = state.get_first_bytes::<T>()?;
-        let extra_account_metas = PodSlice::<ExtraAccountMeta>::unpack(bytes)?;
+        let extra_account_metas = ListView::<ExtraAccountMeta>::unpack(bytes)?;
 
-        for extra_meta in extra_account_metas.data().iter() {
+        for extra_meta in extra_account_metas.as_slice().iter() {
             let mut meta = {
                 // Create a list of `Ref`s so we can reference account data in the
                 // resolution step
@@ -1448,7 +1451,7 @@ mod tests {
         let state = TlvStateBorrowed::unpack(buffer).unwrap();
         let unpacked_metas_pod =
             ExtraAccountMetaList::unpack_with_tlv_state::<TestInstruction>(&state).unwrap();
-        let unpacked_metas = unpacked_metas_pod.data();
+        let unpacked_metas = unpacked_metas_pod.as_slice();
         assert_eq!(
             unpacked_metas, updated_metas,
             "The ExtraAccountMetas in the buffer should match the expected ones."
