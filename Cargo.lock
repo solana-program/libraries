@@ -1757,7 +1757,7 @@ dependencies = [
  "solana-system-interface",
  "solana-sysvar",
  "solana-zk-sdk 2.3.6",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "spl-token-confidential-transfer-proof-extraction",
 ]
 
@@ -1798,26 +1798,6 @@ dependencies = [
 [[package]]
 name = "spl-pod"
 version = "0.5.1"
-dependencies = [
- "base64",
- "borsh 1.5.7",
- "bytemuck",
- "bytemuck_derive",
- "num-derive",
- "num-traits",
- "num_enum",
- "serde",
- "serde_json",
- "solana-program-error",
- "solana-program-option",
- "solana-pubkey",
- "solana-zk-sdk 3.0.0",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "spl-pod"
-version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d994afaf86b779104b4a95ba9ca75b8ced3fdb17ee934e38cb69e72afbe17799"
 dependencies = [
@@ -1832,6 +1812,26 @@ dependencies = [
  "solana-program-option",
  "solana-pubkey",
  "solana-zk-sdk 2.3.6",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "spl-pod"
+version = "0.6.0"
+dependencies = [
+ "base64",
+ "borsh 1.5.7",
+ "bytemuck",
+ "bytemuck_derive",
+ "num-derive",
+ "num-traits",
+ "num_enum",
+ "serde",
+ "serde_json",
+ "solana-program-error",
+ "solana-program-option",
+ "solana-pubkey",
+ "solana-zk-sdk 3.0.0",
  "thiserror 2.0.12",
 ]
 
@@ -1907,7 +1907,7 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1",
- "spl-pod 0.5.1",
+ "spl-pod 0.6.0",
  "spl-program-error 0.7.0",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.12",
@@ -1930,7 +1930,7 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "spl-program-error 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-type-length-value 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 2.0.12",
@@ -1996,7 +1996,7 @@ dependencies = [
  "solana-zk-sdk 2.3.6",
  "spl-elgamal-registry",
  "spl-memo",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "spl-token",
  "spl-token-confidential-transfer-ciphertext-arithmetic",
  "spl-token-confidential-transfer-proof-extraction",
@@ -2036,7 +2036,7 @@ dependencies = [
  "solana-pubkey",
  "solana-sdk-ids",
  "solana-zk-sdk 2.3.6",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "thiserror 2.0.12",
 ]
 
@@ -2066,7 +2066,7 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "thiserror 2.0.12",
 ]
 
@@ -2086,7 +2086,7 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "spl-type-length-value 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 2.0.12",
 ]
@@ -2109,7 +2109,7 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "spl-program-error 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-tlv-account-resolution 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-type-length-value 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2129,7 +2129,7 @@ dependencies = [
  "solana-msg",
  "solana-program-error",
  "spl-discriminator 0.4.1",
- "spl-pod 0.5.1",
+ "spl-pod 0.6.0",
  "spl-type-length-value-derive",
  "thiserror 2.0.12",
 ]
@@ -2148,7 +2148,7 @@ dependencies = [
  "solana-msg",
  "solana-program-error",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "spl-pod 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-pod 0.5.1",
  "thiserror 2.0.12",
 ]
 
