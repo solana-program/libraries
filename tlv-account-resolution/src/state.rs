@@ -8,7 +8,7 @@ use {
     solana_pubkey::Pubkey,
     spl_discriminator::SplDiscriminate,
     spl_pod::{
-        list::{self, List, ListView},
+        list::{self, ListView},
         primitives::PodU32,
     },
     spl_type_length_value::state::{TlvState, TlvStateBorrowed, TlvStateMut},
@@ -219,9 +219,8 @@ impl ExtraAccountMetaList {
     ) -> Result<(), ProgramError> {
         let state = TlvStateBorrowed::unpack(data).unwrap();
         let extra_meta_list = ExtraAccountMetaList::unpack_with_tlv_state::<T>(&state)?;
-        let extra_account_metas = extra_meta_list.as_slice();
 
-        let initial_accounts_len = account_infos.len() - extra_account_metas.len();
+        let initial_accounts_len = account_infos.len() - extra_meta_list.len();
 
         // Convert to `AccountMeta` to check resolved metas
         let provided_metas = account_infos
@@ -229,7 +228,7 @@ impl ExtraAccountMetaList {
             .map(account_info_to_meta)
             .collect::<Vec<_>>();
 
-        for (i, config) in extra_account_metas.iter().enumerate() {
+        for (i, config) in extra_meta_list.iter().enumerate() {
             let meta = {
                 // Create a list of `Ref`s so we can reference account data in the
                 // resolution step
@@ -286,7 +285,7 @@ impl ExtraAccountMetaList {
             account_key_datas.push((meta.pubkey, account_data));
         }
 
-        for extra_meta in extra_account_metas.as_slice().iter() {
+        for extra_meta in extra_account_metas.iter() {
             let mut meta =
                 extra_meta.resolve(&instruction.data, &instruction.program_id, |usize| {
                     account_key_datas
@@ -320,7 +319,7 @@ impl ExtraAccountMetaList {
         let bytes = state.get_first_bytes::<T>()?;
         let extra_account_metas = ListView::<ExtraAccountMeta>::unpack(bytes)?;
 
-        for extra_meta in extra_account_metas.as_slice().iter() {
+        for extra_meta in extra_account_metas.iter() {
             let mut meta = {
                 // Create a list of `Ref`s so we can reference account data in the
                 // resolution step
@@ -1451,9 +1450,8 @@ mod tests {
         let state = TlvStateBorrowed::unpack(buffer).unwrap();
         let unpacked_metas_pod =
             ExtraAccountMetaList::unpack_with_tlv_state::<TestInstruction>(&state).unwrap();
-        let unpacked_metas = unpacked_metas_pod.as_slice();
         assert_eq!(
-            unpacked_metas, updated_metas,
+            &*unpacked_metas_pod, updated_metas,
             "The ExtraAccountMetas in the buffer should match the expected ones."
         );
 
