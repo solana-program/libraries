@@ -6,6 +6,7 @@ use {
     },
     bytemuck::Pod,
     solana_program_error::ProgramError,
+    std::ops::{Deref, DerefMut},
 };
 
 #[derive(Debug)]
@@ -50,38 +51,21 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
 
         Ok(removed_item)
     }
+}
 
-    /// Returns a mutable iterator over the current elements
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
-        self.as_mut_slice().iter_mut()
+impl<T: Pod, L: PodLength> Deref for ListViewMut<'_, T, L> {
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
+        let len = (*self.length).into();
+        &self.data[..len]
     }
+}
 
-    /// Returns a mutable reference to an element at a given index.
-    /// Returns `None` if the index is out of bounds of the current length.
-    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        self.as_mut_slice().get_mut(index)
-    }
-
-    /// Returns a mutable slice of the items currently in the list
-    pub fn as_mut_slice(&mut self) -> &mut [T] {
+impl<T: Pod, L: PodLength> DerefMut for ListViewMut<'_, T, L> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         let len = (*self.length).into();
         &mut self.data[..len]
-    }
-
-    /// Sorts the list (stable). Requires `T` to implement `Ord`.
-    pub fn sort(&mut self)
-    where
-        T: Ord,
-    {
-        self.as_mut_slice().sort();
-    }
-
-    /// Sorts the list (stable) using a comparison function
-    pub fn sort_by<F>(&mut self, compare: F)
-    where
-        F: FnMut(&T, &T) -> std::cmp::Ordering,
-    {
-        self.as_mut_slice().sort_by(compare);
     }
 }
 
@@ -89,16 +73,8 @@ impl<T: Pod, L: PodLength> List for ListViewMut<'_, T, L> {
     type Item = T;
     type Length = L;
 
-    fn len(&self) -> usize {
-        (*self.length).into()
-    }
-
     fn capacity(&self) -> usize {
         self.capacity
-    }
-
-    fn as_slice(&self) -> &[Self::Item] {
-        &self.data[..self.len()]
     }
 }
 
@@ -154,19 +130,19 @@ mod tests {
         view.push(item1).unwrap();
         assert_eq!(view.len(), 1);
         assert!(!view.is_empty());
-        assert_eq!(view.as_slice(), &[item1]);
+        assert_eq!(*view, [item1]);
 
         // Push second item
         let item2 = TestStruct::new(2, 20);
         view.push(item2).unwrap();
         assert_eq!(view.len(), 2);
-        assert_eq!(view.as_slice(), &[item1, item2]);
+        assert_eq!(*view, [item1, item2]);
 
         // Push third item to fill capacity
         let item3 = TestStruct::new(3, 30);
         view.push(item3).unwrap();
         assert_eq!(view.len(), 3);
-        assert_eq!(view.as_slice(), &[item1, item2, item3]);
+        assert_eq!(*view, [item1, item2, item3]);
 
         // Try to push beyond capacity
         let item4 = TestStruct::new(4, 40);
@@ -175,7 +151,7 @@ mod tests {
 
         // Ensure state is unchanged
         assert_eq!(view.len(), 3);
-        assert_eq!(view.as_slice(), &[item1, item2, item3]);
+        assert_eq!(*view, [item1, item2, item3]);
     }
 
     #[test]
@@ -193,32 +169,32 @@ mod tests {
         view.push(item4).unwrap();
 
         assert_eq!(view.len(), 4);
-        assert_eq!(view.as_slice(), &[item1, item2, item3, item4]);
+        assert_eq!(*view, [item1, item2, item3, item4]);
 
         // Remove from the middle
         let removed = view.remove(1).unwrap();
         assert_eq!(removed, item2);
         assert_eq!(view.len(), 3);
-        assert_eq!(view.as_slice(), &[item1, item3, item4]);
+        assert_eq!(*view, [item1, item3, item4]);
 
         // Remove from the end
         let removed = view.remove(2).unwrap();
         assert_eq!(removed, item4);
         assert_eq!(view.len(), 2);
-        assert_eq!(view.as_slice(), &[item1, item3]);
+        assert_eq!(*view, [item1, item3]);
 
         // Remove from the start
         let removed = view.remove(0).unwrap();
         assert_eq!(removed, item1);
         assert_eq!(view.len(), 1);
-        assert_eq!(view.as_slice(), &[item3]);
+        assert_eq!(*view, [item3]);
 
         // Remove the last element
         let removed = view.remove(0).unwrap();
         assert_eq!(removed, item3);
         assert_eq!(view.len(), 0);
         assert!(view.is_empty());
-        assert_eq!(view.as_slice(), &[]);
+        assert_eq!(*view, []);
     }
 
     #[test]
@@ -275,10 +251,7 @@ mod tests {
 
         // Check that the underlying data is modified
         assert_eq!(view.len(), 3);
-        assert_eq!(
-            view.as_slice(),
-            &[expected_item1, expected_item2, expected_item3]
-        );
+        assert_eq!(*view, [expected_item1, expected_item2, expected_item3]);
 
         // Check that iter_mut only iterates over `len` items, not `capacity`
         assert_eq!(view.iter_mut().count(), 3);
@@ -371,7 +344,7 @@ mod tests {
         view.push(item1).unwrap();
 
         // Test get()
-        assert_eq!(view.get(0), Some(&item0));
+        assert_eq!(view.first(), Some(&item0));
         assert_eq!(view.get(1), Some(&item1));
         assert_eq!(view.get(2), None); // out of bounds
         assert_eq!(view.get(100), None); // way out of bounds
@@ -382,15 +355,15 @@ mod tests {
         *item_ref = modified_item0;
 
         // Verify the modification
-        assert_eq!(view.get(0), Some(&modified_item0));
-        assert_eq!(view.as_slice(), &[modified_item0, item1]);
+        assert_eq!(view.first(), Some(&modified_item0));
+        assert_eq!(*view, [modified_item0, item1]);
 
         // Test get_mut() out of bounds
         assert_eq!(view.get_mut(2), None);
     }
 
     #[test]
-    fn test_as_mut_slice() {
+    fn test_mutable_access_via_indexing() {
         let mut buffer = vec![];
         let mut view = init_view_mut::<TestStruct, PodU32>(&mut buffer, 3);
 
@@ -399,14 +372,14 @@ mod tests {
         view.push(item0).unwrap();
         view.push(item1).unwrap();
 
-        assert_eq!(view.as_mut_slice().len(), 2);
+        assert_eq!(view.len(), 2);
 
         // Modify via the mutable slice
-        view.as_mut_slice()[0].a = 99;
+        view[0].a = 99;
 
         let expected_item0 = TestStruct::new(99, 10);
-        assert_eq!(view.get(0), Some(&expected_item0));
-        assert_eq!(view.as_slice(), &[expected_item0, item1]);
+        assert_eq!(view.first(), Some(&expected_item0));
+        assert_eq!(*view, [expected_item0, item1]);
     }
 
     #[test]
@@ -428,26 +401,26 @@ mod tests {
 
         // Sort by `b` field in descending order.
         view.sort_by(|a, b| b.b.cmp(&a.b));
-        let expected_order_by_b_desc = &[
+        let expected_order_by_b_desc = [
             item4, // b: 5
             item3, // b: 4
             item2, // b: 3
             item1, // b: 2
             item0, // b: 1
         ];
-        assert_eq!(view.as_slice(), expected_order_by_b_desc);
+        assert_eq!(*view, expected_order_by_b_desc);
 
         // Now, sort by `a` in ascending order. A stable sort preserves the relative
         // order of equal elements from the previous state of the list.
         view.sort_by(|x, y| x.a.cmp(&y.a));
 
-        let expected_order_by_a_stable = &[
+        let expected_order_by_a_stable = [
             item3, // a: 1
             item4, // a: 2 (was before item1 in the previous state)
             item1, // a: 2
             item2, // a: 5 (was before item0 in the previous state)
             item0, // a: 5
         ];
-        assert_eq!(view.as_slice(), expected_order_by_a_stable);
+        assert_eq!(*view, expected_order_by_a_stable);
     }
 }
