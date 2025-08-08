@@ -77,7 +77,7 @@ pub fn to_str(
     });
     let this_impl = quote! {
         impl #program_error_import::ToStr for #ident {
-            fn to_str<E>(&self) -> &'static str {
+            fn to_str(&self) -> &'static str {
                 match self {
                     #(#ppe_match_arms),*
                 }

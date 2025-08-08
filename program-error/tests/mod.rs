@@ -38,11 +38,11 @@ mod tests {
         );
         // `ToStr`
         assert_eq!(
-            ToStr::to_str::<to_str::ExampleError>(&to_str::ExampleError::MintHasNoMintAuthority,),
+            ToStr::to_str(&to_str::ExampleError::MintHasNoMintAuthority,),
             "Mint has no mint authority"
         );
         assert_eq!(
-            ToStr::to_str::<to_str::ExampleError>(&to_str::ExampleError::IncorrectMintAuthority,),
+            ToStr::to_str(&to_str::ExampleError::IncorrectMintAuthority,),
             "Incorrect mint authority has signed the instruction"
         );
     }
@@ -61,11 +61,11 @@ mod tests {
         );
         // `ToStr`
         assert_eq!(
-            ToStr::to_str::<spl::ExampleError>(&spl::ExampleError::MintHasNoMintAuthority),
+            ToStr::to_str(&spl::ExampleError::MintHasNoMintAuthority),
             "Mint has no mint authority"
         );
         assert_eq!(
-            ToStr::to_str::<spl::ExampleError>(&spl::ExampleError::IncorrectMintAuthority),
+            ToStr::to_str(&spl::ExampleError::IncorrectMintAuthority),
             "Incorrect mint authority has signed the instruction",
         );
     }
