@@ -1129,7 +1129,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8dc71126edddc2ba014622fc32d0f5e2e78ec6c5a1e0eb511b85618c09e9ea11"
 dependencies = [
  "solana-account-info",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
  "solana-instruction",
  "solana-program-error",
  "solana-pubkey",
@@ -1145,7 +1145,7 @@ dependencies = [
  "bytemuck",
  "bytemuck_derive",
  "curve25519-dalek",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
  "subtle",
  "thiserror 2.0.12",
 ]
@@ -1164,6 +1164,12 @@ name = "solana-define-syscall"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf784bb2cb3e02cac9801813c30187344228d2ae952534902108f6150573a33d"
+
+[[package]]
+name = "solana-define-syscall"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9697086a4e102d28a156b8d6b521730335d6951bd39a5e766512bbe09007cee"
 
 [[package]]
 name = "solana-derivation-path"
@@ -1243,7 +1249,7 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_derive",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
  "solana-pubkey",
  "wasm-bindgen",
 ]
@@ -1284,7 +1290,16 @@ version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f36a1a14399afaabc2781a1db09cb14ee4cc4ee5c7a5a3cfcc601811379a8092"
 dependencies = [
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
+]
+
+[[package]]
+name = "solana-msg"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "264275c556ea7e22b9d3f87d56305546a38d4eee8ec884f3b126236cb7dcbbb4"
+dependencies = [
+ "solana-define-syscall 3.0.0",
 ]
 
 [[package]]
@@ -1300,7 +1315,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "473ffe73c68d93e9f2aa726ad2985fe52760052709aaab188100a42c618060ec"
 dependencies = [
  "solana-account-info",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-pubkey",
 ]
@@ -1315,7 +1330,7 @@ dependencies = [
  "num-traits",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-pubkey",
 ]
 
@@ -1326,7 +1341,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b0268f6c89825fb634a34bd0c3b8fdaeaecfc3728be1d622a8ee6dd577b60d4"
 dependencies = [
  "num-traits",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
 ]
 
 [[package]]
@@ -1365,7 +1380,7 @@ dependencies = [
  "serde_derive",
  "solana-atomic-u64",
  "solana-decode-error",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
  "solana-sanitize",
  "solana-sha256-hasher",
  "wasm-bindgen",
@@ -1455,7 +1470,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa3feb32c28765f6aa1ce8f3feac30936f16c5c3f7eb73d63a5b8f6f8ecdc44"
 dependencies = [
  "sha2",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
  "solana-hash",
 ]
 
@@ -1564,7 +1579,7 @@ dependencies = [
  "serde_derive",
  "solana-account-info",
  "solana-clock",
- "solana-define-syscall",
+ "solana-define-syscall 2.2.1",
  "solana-epoch-rewards",
  "solana-epoch-schedule",
  "solana-fee-calculator",
@@ -1756,7 +1771,7 @@ dependencies = [
  "solana-account-info",
  "solana-cpi",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -1798,7 +1813,7 @@ checksum = "9f09647c0974e33366efeb83b8e2daebb329f0420149e74d3a4bd2c08cf9f7cb"
 dependencies = [
  "solana-account-info",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -1816,7 +1831,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "solana-decode-error",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-program-option",
  "solana-pubkey",
@@ -1854,7 +1869,7 @@ dependencies = [
  "num_enum",
  "serial_test",
  "solana-decode-error",
- "solana-msg",
+ "solana-msg 3.0.0",
  "solana-program-error",
  "solana-sha256-hasher",
  "solana-sysvar",
@@ -1871,7 +1886,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "solana-decode-error",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "spl-program-error-derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 2.0.12",
@@ -1935,7 +1950,7 @@ dependencies = [
  "solana-account-info",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1960,7 +1975,7 @@ dependencies = [
  "solana-cpi",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-program-memory",
@@ -1989,7 +2004,7 @@ dependencies = [
  "solana-cpi",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-native-token",
  "solana-program-entrypoint",
  "solana-program-error",
@@ -2040,7 +2055,7 @@ dependencies = [
  "solana-curve25519",
  "solana-instruction",
  "solana-instructions-sysvar",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-pubkey",
  "solana-sdk-ids",
@@ -2071,7 +2086,7 @@ dependencies = [
  "num-traits",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2091,7 +2106,7 @@ dependencies = [
  "solana-borsh 2.2.1",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2114,7 +2129,7 @@ dependencies = [
  "solana-cpi",
  "solana-decode-error",
  "solana-instruction",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "solana-pubkey",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2135,7 +2150,7 @@ dependencies = [
  "num_enum",
  "solana-account-info",
  "solana-decode-error",
- "solana-msg",
+ "solana-msg 3.0.0",
  "solana-program-error",
  "spl-discriminator 0.4.1",
  "spl-pod 0.6.0",
@@ -2154,7 +2169,7 @@ dependencies = [
  "num-traits",
  "solana-account-info",
  "solana-decode-error",
- "solana-msg",
+ "solana-msg 2.2.1",
  "solana-program-error",
  "spl-discriminator 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-pod 0.5.1",
