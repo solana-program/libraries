@@ -87,7 +87,7 @@ impl From<AccountResolutionError> for ProgramError {
 }
 
 impl ToStr for AccountResolutionError {
-    fn to_str<E>(&self) -> &'static str {
+    fn to_str(&self) -> &'static str {
         match self {
             AccountResolutionError::IncorrectAccount => {
                 "Incorrect account provided"

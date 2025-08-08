@@ -9,7 +9,7 @@ edition = "2021"
 
 [dependencies]
 bytemuck = "1.23.2"
-solana-pubkey = { version = "2.2.1", default-features = false, features = [
+solana-pubkey = { version = "3.0.0", default-features = false, features = [
     "bytemuck",
 ] }
 

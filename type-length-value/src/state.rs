@@ -563,7 +563,7 @@ pub fn realloc_and_pack_variable_len_with_repetition<V: SplDiscriminate + Variab
         let additional_bytes = new_length
             .checked_sub(previous_length)
             .ok_or(ProgramError::AccountDataTooSmall)?;
-        account_info.realloc(previous_account_size.saturating_add(additional_bytes), true)?;
+        account_info.resize(previous_account_size.saturating_add(additional_bytes))?;
         let mut buffer = account_info.try_borrow_mut_data()?;
         let mut state = TlvStateMut::unpack(&mut buffer)?;
         state.realloc_with_repetition::<V>(new_length, repetition_number)?;
@@ -581,7 +581,7 @@ pub fn realloc_and_pack_variable_len_with_repetition<V: SplDiscriminate + Variab
             state.realloc_with_repetition::<V>(new_length, repetition_number)?;
             // this is probably fine, but be safe and avoid invalidating references
             drop(buffer);
-            account_info.realloc(previous_account_size.saturating_sub(removed_bytes), false)?;
+            account_info.resize(previous_account_size.saturating_sub(removed_bytes))?;
         }
     }
     Ok(())

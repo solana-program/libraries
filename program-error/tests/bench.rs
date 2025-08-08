@@ -19,7 +19,7 @@ impl From<ExampleError> for solana_program_error::ProgramError {
 }
 
 impl solana_program_error::ToStr for ExampleError {
-    fn to_str<E>(&self) -> &'static str {
+    fn to_str(&self) -> &'static str {
         match self {
             ExampleError::MintHasNoMintAuthority => "Mint has no mint authority",
             ExampleError::IncorrectMintAuthority => {

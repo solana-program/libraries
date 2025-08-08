@@ -15,4 +15,4 @@ pub mod variable_len_pack;
 // Expose derive macro on feature flag
 #[cfg(feature = "derive")]
 pub use spl_type_length_value_derive::SplBorshVariableLenPack;
-pub use {solana_account_info, solana_decode_error, solana_program_error};
+pub use {solana_account_info, solana_program_error};

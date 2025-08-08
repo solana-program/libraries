@@ -455,7 +455,6 @@ mod tests {
                 &mut data1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey2,
@@ -465,7 +464,6 @@ mod tests {
                 &mut data2,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey3,
@@ -475,7 +473,6 @@ mod tests {
                 &mut data3,
                 &owner,
                 false,
-                0,
             ),
         ];
 
@@ -836,7 +833,6 @@ mod tests {
                 &mut data1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey2,
@@ -846,7 +842,6 @@ mod tests {
                 &mut data2,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey3,
@@ -856,7 +851,6 @@ mod tests {
                 &mut data3,
                 &owner,
                 false,
-                0,
             ),
         ];
 
@@ -1233,7 +1227,6 @@ mod tests {
                 &mut data_ix_1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey_ix_2,
@@ -1243,7 +1236,6 @@ mod tests {
                 &mut data_ix_2,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &extra_meta1.pubkey,
@@ -1253,7 +1245,6 @@ mod tests {
                 &mut data1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &extra_meta2.pubkey,
@@ -1263,7 +1254,6 @@ mod tests {
                 &mut data2,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &extra_meta3.pubkey,
@@ -1273,7 +1263,6 @@ mod tests {
                 &mut data3,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_required_pda1_pubkey,
@@ -1283,7 +1272,6 @@ mod tests {
                 &mut data_pda1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_required_pda2_pubkey,
@@ -1293,7 +1281,6 @@ mod tests {
                 &mut data_pda2,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_required_pda3_pubkey,
@@ -1303,7 +1290,6 @@ mod tests {
                 &mut data_pda3,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_required_pda4_pubkey,
@@ -1313,7 +1299,6 @@ mod tests {
                 &mut data_pda4,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_key_data1_pubkey,
@@ -1323,7 +1308,6 @@ mod tests {
                 &mut data_key_data1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_key_data2_pubkey,
@@ -1333,7 +1317,6 @@ mod tests {
                 &mut data_key_data2,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &check_key_data3_pubkey,
@@ -1343,7 +1326,6 @@ mod tests {
                 &mut data_key_data3,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey_arb_1,
@@ -1353,7 +1335,6 @@ mod tests {
                 &mut data_arb_1,
                 &owner,
                 false,
-                0,
             ),
             AccountInfo::new(
                 &pubkey_arb_2,
@@ -1363,7 +1344,6 @@ mod tests {
                 &mut data_arb_2,
                 &owner,
                 false,
-                0,
             ),
         ];
 
@@ -1623,7 +1603,6 @@ mod tests {
                 &mut data_ix_1,
                 &owner,
                 false,
-                0,
             ),
             // Instruction account 2
             AccountInfo::new(
@@ -1634,7 +1613,6 @@ mod tests {
                 &mut data_ix_2,
                 &owner,
                 false,
-                0,
             ),
             // Required account 1
             AccountInfo::new(
@@ -1645,7 +1623,6 @@ mod tests {
                 &mut data1,
                 &owner,
                 false,
-                0,
             ),
             // Required account 2
             AccountInfo::new(
@@ -1656,19 +1633,9 @@ mod tests {
                 &mut data2,
                 &owner,
                 false,
-                0,
             ),
             // Required account 3 (PDA)
-            AccountInfo::new(
-                &pda,
-                false,
-                true,
-                &mut lamports3,
-                &mut data3,
-                &owner,
-                false,
-                0,
-            ),
+            AccountInfo::new(&pda, false, true, &mut lamports3, &mut data3, &owner, false),
             // Required account 4 (pubkey data)
             AccountInfo::new(
                 &key_data_pubkey,
@@ -1678,7 +1645,6 @@ mod tests {
                 &mut data4,
                 &owner,
                 false,
-                0,
             ),
         ];
 
