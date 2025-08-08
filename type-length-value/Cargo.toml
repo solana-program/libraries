@@ -12,7 +12,7 @@ exclude = ["js/**"]
 derive = ["dep:spl-type-length-value-derive", "solana-program-error/borsh"]
 
 [dependencies]
-bytemuck = { version = "1.23.1", features = ["derive"] }
+bytemuck = { version = "1.23.2", features = ["derive"] }
 num-derive = "0.4"
 num_enum = "0.7"
 num-traits = "0.2"

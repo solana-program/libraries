@@ -8,7 +8,7 @@ license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]
-bytemuck = "1.23.1"
+bytemuck = "1.23.2"
 solana-pubkey = { version = "2.2.1", default-features = false, features = [
     "bytemuck",
 ] }
