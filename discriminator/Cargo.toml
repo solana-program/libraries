@@ -14,7 +14,7 @@ borsh = ["dep:borsh"]
 borsh = { version = "1", optional = true, features = ["derive"] }
 bytemuck = { version = "1.23.2", features = ["derive"] }
 solana-program-error = "2.2.2"
-solana-sha256-hasher = "2.3.0"
+solana-sha256-hasher = "3.0.0"
 spl-discriminator-derive = { version = "0.2.0", path = "./derive" }
 
 [dev-dependencies]
