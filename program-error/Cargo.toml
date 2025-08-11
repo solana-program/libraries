@@ -1,6 +1,6 @@
 [package]
 name = "spl-program-error"
-version = "0.7.0"
+version = "0.8.0"
 description = "Library for Solana Program error attributes and derive macro for creating them"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
