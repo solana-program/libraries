@@ -1,6 +1,6 @@
 [package]
 name = "spl-type-length-value-derive"
-version = "0.2.0"
+version = "0.2.1"
 description = "Derive Macro Library for SPL Type Length Value traits"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
