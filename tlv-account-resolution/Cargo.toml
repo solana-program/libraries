@@ -20,7 +20,7 @@ solana-account-info = "2.2.1"
 solana-decode-error = "2.2.1"
 solana-instruction = { version = "2.2.1", features = ["std"] }
 solana-program-error = "2.2.2"
-solana-pubkey = { version = "2.2.1", features = ["curve25519"] }
+solana-pubkey = { version = "3.0.0", features = ["curve25519"] }
 spl-discriminator = { version = "0.4.0", path = "../discriminator" }
 spl-program-error = { version = "0.7.0", path = "../program-error" }
 spl-pod = { version = "0.6.0", path = "../pod" }
