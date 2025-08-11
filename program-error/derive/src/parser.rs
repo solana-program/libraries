@@ -15,7 +15,7 @@ pub struct SplProgramErrorArgs {
     /// Whether to hash the error codes using sha-256
     /// or to use the default error code assigned by `num_traits`.
     pub hash_error_code_start: Option<u32>,
-    /// Crate to use for solana_program_error
+    /// Crate to use for `solana_program_error`
     pub program_error_import: SolanaProgramError,
 }
 
@@ -72,8 +72,8 @@ impl Parse for SplProgramErrorArgs {
     }
 }
 
-/// Parser for args to the `#[spl_program_error]` attribute
-/// ie. `#[spl_program_error(hash_error_code_start = 1275525928)]`
+/// Parser for args to the `#[spl_program_error]` attribute.
+/// For example, `#[spl_program_error(hash_error_code_start = 1275525928)]`.
 enum SplProgramErrorArgParser {
     HashErrorCodes {
         _equals_sign: Token![=],

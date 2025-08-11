@@ -23,7 +23,7 @@ pub struct SplDiscriminateBuilder {
     pub generics: Generics,
     /// The item's where clause for generics (if any)
     pub where_clause: Option<WhereClause>,
-    /// The TLV hash_input
+    /// The TLV `hash_input`
     pub hash_input: String,
 }
 
@@ -99,7 +99,7 @@ impl From<&SplDiscriminateBuilder> for TokenStream {
     }
 }
 
-/// Returns the bytes for the TLV hash_input discriminator
+/// Returns the bytes for the TLV `hash_input` discriminator
 fn get_discriminator_bytes(hash_input: &str) -> LitByteStr {
     LitByteStr::new(
         &Sha256::digest(hash_input.as_bytes())[..8],

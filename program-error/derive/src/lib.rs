@@ -44,7 +44,7 @@ pub fn to_str(input: TokenStream) -> TokenStream {
         .into()
 }
 
-/// Proc macro attribute to turn your enum into a Solana Program Error
+/// Proc-macro attribute to turn your enum into a Solana Program Error
 ///
 /// Adds:
 /// - `Clone`
