@@ -32,7 +32,7 @@ futures-util = "0.3"
 tokio = { version = "1", features = ["rt", "macros"] }
 
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["lib"]
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
