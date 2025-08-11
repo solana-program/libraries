@@ -1,6 +1,6 @@
 [package]
 name = "spl-type-length-value"
-version = "0.8.0"
+version = "0.9.0"
 description = "Solana Program Library Type-Length-Value Management"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
