@@ -21,7 +21,7 @@ thiserror = "2.0"
 lazy_static = "1.5"
 serial_test = "3.2"
 solana-sha256-hasher = "2.3.0"
-solana-sysvar = "2.3.0"
+solana-sysvar = "3.0.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
