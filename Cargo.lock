@@ -1906,7 +1906,7 @@ dependencies = [
 
 [[package]]
 name = "spl-pod"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "base64",
  "borsh 1.5.7",
@@ -1967,7 +1967,7 @@ dependencies = [
  "solana-program-error 3.0.0",
  "solana-pubkey 3.0.0",
  "spl-discriminator 0.5.0",
- "spl-pod 0.7.0",
+ "spl-pod 0.7.1",
  "spl-program-error",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.12",
@@ -2107,7 +2107,7 @@ dependencies = [
  "solana-msg 3.0.0",
  "solana-program-error 3.0.0",
  "spl-discriminator 0.5.0",
- "spl-pod 0.7.0",
+ "spl-pod 0.7.1",
  "spl-type-length-value-derive",
  "thiserror 2.0.12",
 ]

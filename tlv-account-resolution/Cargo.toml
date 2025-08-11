@@ -22,7 +22,7 @@ solana-program-error = "3.0.0"
 solana-pubkey = { version = "3.0.0", features = ["curve25519"] }
 spl-discriminator = { version = "0.5.0", path = "../discriminator" }
 spl-program-error = { version = "0.7.0", path = "../program-error" }
-spl-pod = { version = "0.7.0", path = "../pod" }
+spl-pod = { version = "0.7.1", path = "../pod" }
 spl-type-length-value = { version = "0.8.0", path = "../type-length-value" }
 thiserror = "2.0"
 
