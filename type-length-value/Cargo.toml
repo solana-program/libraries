@@ -19,7 +19,7 @@ num-traits = "0.2"
 solana-account-info = "3.0.0"
 solana-msg = "3.0.0"
 solana-program-error = "3.0.0"
-spl-discriminator = { version = "0.4.0", path = "../discriminator" }
+spl-discriminator = { version = "0.5.0", path = "../discriminator" }
 spl-type-length-value-derive = { version = "0.2", path = "./derive", optional = true }
 spl-pod = { version = "0.6.0", path = "../pod" }
 thiserror = "2.0"
