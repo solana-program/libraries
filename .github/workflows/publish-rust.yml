@@ -83,14 +83,15 @@ jobs:
           tool: toml-cli,cargo-semver-checks@0.42.0,cargo-release@0.25.18
 
       - name: Check if crate has a lib target
-        shell: bash
         id: has_lib
+        shell: bash
         run: |
-          toml get "${{ inputs.package_path }}/Cargo.toml" lib.crate-type | grep lib
-          if [[ $? -eq 1 ]]; then
-            echo "has_lib=false" >> "$GITHUB_OUTPUT"
-          else
+          set +e # toml crashes the whole shell if it fails to find the key
+          result=$(toml get "${{ inputs.package_path }}/Cargo.toml" lib.crate-type)
+          if [[ "$result" == *"lib"* ]]; then
             echo "has_lib=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_lib=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set Git Author (required for cargo-release)
