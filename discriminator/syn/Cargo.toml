@@ -1,6 +1,6 @@
 [package]
 name = "spl-discriminator-syn"
-version = "0.2.0"
+version = "0.2.1"
 description = "Token parsing and generating library for the `spl-discriminator` library"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
