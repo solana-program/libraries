@@ -28,7 +28,7 @@ impl From<TlvError> for ProgramError {
 }
 
 impl ToStr for TlvError {
-    fn to_str<E>(&self) -> &'static str {
+    fn to_str(&self) -> &'static str {
         match self {
             TlvError::TypeNotFound => "Type not found in TLV data",
             TlvError::TypeAlreadyExists => "Type already exists in TLV data",
