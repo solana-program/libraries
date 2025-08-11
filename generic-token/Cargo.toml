@@ -1,6 +1,6 @@
 [package]
 name = "spl-generic-token"
-version = "2.0.0"
+version = "2.0.1"
 description = "Solana Program Library Generic Token"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
