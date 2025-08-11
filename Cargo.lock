@@ -1943,7 +1943,7 @@ dependencies = [
 
 [[package]]
 name = "spl-program-error-derive"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "proc-macro2",
  "quote",
