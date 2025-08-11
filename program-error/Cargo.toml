@@ -23,7 +23,7 @@ solana-sha256-hasher = "3.0.0"
 solana-sysvar = "3.0.0"
 
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["lib"]
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

@@ -10,8 +10,8 @@ use {
     },
 };
 
-/// Struct used for `syn` parsing of the hash_input attribute
-/// #[discriminator_hash_input("...")]
+/// Struct used for `syn` parsing of the `hash_input` attribute:
+/// `#[discriminator_hash_input("...")]`
 struct HashInputValueParser {
     value: LitStr,
     _comma: Option<Comma>,
@@ -25,7 +25,7 @@ impl Parse for HashInputValueParser {
     }
 }
 
-/// Parses the hash_input from the `#[discriminator_hash_input("...")]`
+/// Parses the `hash_input` from the `#[discriminator_hash_input("...")]`
 /// attribute
 pub fn parse_hash_input(attrs: &[Attribute]) -> Result<String, SplDiscriminateError> {
     match attrs

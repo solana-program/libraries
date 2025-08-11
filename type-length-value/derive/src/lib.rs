@@ -1,4 +1,4 @@
-//! Crate defining a derive macro for a basic borsh implementation of
+//! Crate defining a derive macro for a basic `borsh` implementation of
 //! the trait `VariableLenPack`.
 
 #![deny(missing_docs)]

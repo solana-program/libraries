@@ -133,7 +133,7 @@ pub fn spl_program_error(
 /// It will then check to make sure the provided `hash_error_code_start` is
 /// equal to the hash-produced `u32`.
 ///
-/// See https://docs.rs/syn/latest/syn/struct.Variant.html
+/// See the [`syn` docs](https://docs.rs/syn/latest/syn/struct.Variant.html).
 fn set_first_discriminant(item_enum: &mut ItemEnum, error_code_start: u32) {
     let enum_ident = &item_enum.ident;
     if item_enum.variants.is_empty() {
@@ -158,7 +158,7 @@ fn set_first_discriminant(item_enum: &mut ItemEnum, error_code_start: u32) {
 }
 
 /// Hashes the `SPL_ERROR_HASH_NAMESPACE` constant, the enum name and variant
-/// name and returns four middle bytes (13 through 16) as a u32.
+/// name and returns four middle bytes (13 through 16) as a `u32`.
 fn u32_from_hash(enum_ident: &Ident) -> u32 {
     let hash_input = format!("{}:{}", SPL_ERROR_HASH_NAMESPACE, enum_ident);
 
