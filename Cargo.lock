@@ -1860,7 +1860,7 @@ dependencies = [
  "quote",
  "sha2",
  "syn 2.0.104",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
