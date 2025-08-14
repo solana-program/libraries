@@ -14,10 +14,10 @@ edition = "2021"
 [dev-dependencies]
 rand = "0.9.2"
 spl-generic-token = { path = "../generic-token" }
-spl-token-interface = "1.0.0"
-spl-token-2022-interface = "1.0.0"
-solana-program-pack = "2.2.1"
-solana-pubkey = { version = "2.2.1", features = [
+spl-token-interface = "2.0.0"
+spl-token-2022-interface = "2.0.0"
+solana-program-pack = "3.0.0"
+solana-pubkey = { version = "3.0.0", features = [
     "rand",
 ] }
 test-case = "3.3.1"
