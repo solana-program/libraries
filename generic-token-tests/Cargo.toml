@@ -16,7 +16,7 @@ rand = "0.9.2"
 spl-generic-token = { path = "../generic-token" }
 spl-token-interface = "1.0.0"
 spl-token-2022-interface = "1.0.0"
-solana-program-pack = "2.2.1"
+solana-program-pack = "3.0.0"
 solana-pubkey = { version = "2.2.1", features = [
     "rand",
 ] }

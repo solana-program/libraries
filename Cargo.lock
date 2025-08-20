@@ -1431,6 +1431,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-program-pack"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c169359de21f6034a63ebf96d6b380980307df17a8d371344ff04a883ec4e9d0"
+dependencies = [
+ "solana-program-error 3.0.0",
+]
+
+[[package]]
 name = "solana-pubkey"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1876,7 +1885,7 @@ name = "spl-generic-token-tests"
 version = "0.0.0"
 dependencies = [
  "rand 0.9.2",
- "solana-program-pack",
+ "solana-program-pack 3.0.0",
  "solana-pubkey 2.4.0",
  "spl-generic-token",
  "spl-token-2022-interface",
@@ -1991,7 +2000,7 @@ dependencies = [
  "solana-msg 2.2.1",
  "solana-program-error 2.2.2",
  "solana-program-option 2.2.1",
- "solana-program-pack",
+ "solana-program-pack 2.2.1",
  "solana-pubkey 2.4.0",
  "solana-sdk-ids 2.2.1",
  "solana-zk-sdk 2.3.6",
@@ -2068,7 +2077,7 @@ dependencies = [
  "solana-instruction 2.3.0",
  "solana-program-error 2.2.2",
  "solana-program-option 2.2.1",
- "solana-program-pack",
+ "solana-program-pack 2.2.1",
  "solana-pubkey 2.4.0",
  "solana-sdk-ids 2.2.1",
  "thiserror 2.0.16",
