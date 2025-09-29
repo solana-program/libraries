@@ -11,7 +11,7 @@ updates:
     interval: daily
     time: "08:00"
     timezone: UTC
-  open-pull-requests-limit: 6
+  open-pull-requests-limit: 0
 - package-ecosystem: npm
   directory: "/"
   schedule:
