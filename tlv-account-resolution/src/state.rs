@@ -33,28 +33,25 @@ fn account_info_to_meta(account_info: &AccountInfo) -> AccountMeta {
 
 /// De-escalate an account meta if necessary
 fn de_escalate_account_meta(account_meta: &mut AccountMeta, account_metas: &[AccountMeta]) {
-    // This is a little tricky to read, but the idea is to see if
-    // this account is marked as writable or signer anywhere in
-    // the instruction at the start. If so, DON'T escalate it to
-    // be a writer or signer in the CPI
+    // This is a little tricky to read, but the idea is to see if this account
+    // is marked as writable anywhere in the instruction at the start. If so,
+    // DON'T escalate it to be a writer in the CPI
     let maybe_highest_privileges = account_metas
         .iter()
         .filter(|&x| x.pubkey == account_meta.pubkey)
-        .map(|x| (x.is_signer, x.is_writable))
-        .reduce(|acc, x| (acc.0 || x.0, acc.1 || x.1));
+        .map(|x| x.is_writable)
+        .reduce(|acc, x| acc || x);
     // If `Some`, then the account was found somewhere in the instruction
-    if let Some((is_signer, is_writable)) = maybe_highest_privileges {
-        if !is_signer && is_signer != account_meta.is_signer {
-            // Existing account is *NOT* a signer already, but the CPI
-            // wants it to be, so de-escalate to not be a signer
-            account_meta.is_signer = false;
-        }
+    if let Some(is_writable) = maybe_highest_privileges {
         if !is_writable && is_writable != account_meta.is_writable {
             // Existing account is *NOT* writable already, but the CPI
             // wants it to be, so de-escalate to not be writable
             account_meta.is_writable = false;
         }
     }
+
+    // Always mark an account as a non-signer
+    account_meta.is_signer = false;
 }
 
 /// Stateless helper for storing additional accounts required for an
@@ -400,6 +397,20 @@ mod tests {
         }
     }
 
+    /// Helper to convert an `AccountInfo` to an `AccountMeta`
+    fn account_info_to_meta_non_signer(account_info: &AccountInfo) -> AccountMeta {
+        AccountMeta {
+            pubkey: *account_info.key,
+            is_signer: false,
+            is_writable: account_info.is_writable,
+        }
+    }
+
+    fn de_escalate_signer(mut account_meta: AccountMeta) -> AccountMeta {
+        account_meta.is_signer = false;
+        account_meta
+    }
+
     #[tokio::test]
     async fn init_with_metas() {
         let metas = [
@@ -426,7 +437,7 @@ mod tests {
 
         let check_metas = metas
             .iter()
-            .map(|e| AccountMeta::try_from(e).unwrap())
+            .map(|e| de_escalate_signer(AccountMeta::try_from(e).unwrap()))
             .collect::<Vec<_>>();
 
         assert_eq!(instruction.accounts, check_metas,);
@@ -525,9 +536,9 @@ mod tests {
 
         // Convert to `AccountMeta` to check instruction
         let check_metas = [
-            account_info_to_meta(&account_infos[0]),
-            account_info_to_meta(&account_infos[1]),
-            account_info_to_meta(&account_infos[2]),
+            de_escalate_signer(account_info_to_meta(&account_infos[0])),
+            de_escalate_signer(account_info_to_meta(&account_infos[1])),
+            de_escalate_signer(account_info_to_meta(&account_infos[2])),
             AccountMeta::new(check_required_pda, false),
         ];
 
@@ -614,10 +625,10 @@ mod tests {
         )
         .0;
         let check_metas = [
-            ix_account1,
-            ix_account2,
-            extra_meta1,
-            extra_meta2,
+            ix_account1, // not de-escalated since it's not extra
+            ix_account2, // not de-escalated since it's not extra
+            de_escalate_signer(extra_meta1),
+            de_escalate_signer(extra_meta2),
             AccountMeta::new(check_extra_meta3_pubkey, false),
             AccountMeta::new(check_extra_meta4_pubkey, false),
         ];
@@ -743,10 +754,10 @@ mod tests {
         )
         .0;
         let check_metas = [
-            extra_meta1,
-            extra_meta2,
-            extra_meta3,
-            extra_meta4,
+            de_escalate_signer(extra_meta1),
+            de_escalate_signer(extra_meta2),
+            de_escalate_signer(extra_meta3),
+            de_escalate_signer(extra_meta4),
             AccountMeta::new(check_extra_meta5_pubkey, false),
             AccountMeta::new(check_extra_meta6_pubkey, false),
         ];
@@ -940,7 +951,7 @@ mod tests {
 
         let test_ix_check_metas = account_infos
             .iter()
-            .map(account_info_to_meta)
+            .map(account_info_to_meta_non_signer)
             .collect::<Vec<_>>();
         assert_eq!(instruction.accounts, test_ix_check_metas,);
 
@@ -986,10 +997,10 @@ mod tests {
         .0;
 
         let test_other_ix_check_metas = vec![
-            extra_meta1,
-            extra_meta2,
-            extra_meta3,
-            extra_meta4,
+            de_escalate_signer(extra_meta1),
+            de_escalate_signer(extra_meta2),
+            de_escalate_signer(extra_meta3),
+            de_escalate_signer(extra_meta4),
             AccountMeta::new(check_extra_meta5_pubkey, false),
             AccountMeta::new(check_extra_meta6_pubkey, false),
             AccountMeta::new(instruction_key_data_pubkey_arg, false),
@@ -1471,7 +1482,7 @@ mod tests {
         ];
         let check_metas_1 = updated_metas_1
             .iter()
-            .map(|e| AccountMeta::try_from(e).unwrap())
+            .map(|e| de_escalate_signer(AccountMeta::try_from(e).unwrap()))
             .collect::<Vec<_>>();
         update_and_assert_metas(program_id, &mut buffer, &updated_metas_1, &check_metas_1).await;
 
@@ -1483,7 +1494,7 @@ mod tests {
         ];
         let check_metas_2 = updated_metas_2
             .iter()
-            .map(|e| AccountMeta::try_from(e).unwrap())
+            .map(|e| de_escalate_signer(AccountMeta::try_from(e).unwrap()))
             .collect::<Vec<_>>();
         update_and_assert_metas(program_id, &mut buffer, &updated_metas_2, &check_metas_2).await;
 
@@ -1492,7 +1503,7 @@ mod tests {
             [ExtraAccountMeta::new_with_pubkey(&Pubkey::new_unique(), true, true).unwrap()];
         let check_metas_3 = updated_metas_3
             .iter()
-            .map(|e| AccountMeta::try_from(e).unwrap())
+            .map(|e| de_escalate_signer(AccountMeta::try_from(e).unwrap()))
             .collect::<Vec<_>>();
         update_and_assert_metas(program_id, &mut buffer, &updated_metas_3, &check_metas_3).await;
 
@@ -1521,7 +1532,7 @@ mod tests {
         )
         .0;
         let check_metas_4 = [
-            AccountMeta::new(seed_pubkey, true),
+            AccountMeta::new(seed_pubkey, false),
             AccountMeta::new(simple_pda, false),
         ];
 
