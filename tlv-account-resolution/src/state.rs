@@ -33,9 +33,9 @@ fn account_info_to_meta(account_info: &AccountInfo) -> AccountMeta {
 
 /// De-escalate an account meta if necessary
 fn de_escalate_account_meta(account_meta: &mut AccountMeta, account_metas: &[AccountMeta]) {
-    // This is a little tricky to read, but the idea is to see if this account
-    // is marked as writable anywhere in the instruction at the start. If so,
-    // DON'T escalate it to be a writer in the CPI
+    // This is a little tricky to read, but checks if this account is marked as
+    // writable in the instruction. If it's read-only, de-escalate it to read-only
+    // in the CPI.
     let maybe_highest_privileges = account_metas
         .iter()
         .filter(|&x| x.pubkey == account_meta.pubkey)
@@ -536,9 +536,9 @@ mod tests {
 
         // Convert to `AccountMeta` to check instruction
         let check_metas = [
-            de_escalate_signer(account_info_to_meta(&account_infos[0])),
-            de_escalate_signer(account_info_to_meta(&account_infos[1])),
-            de_escalate_signer(account_info_to_meta(&account_infos[2])),
+            account_info_to_meta_non_signer(&account_infos[0]),
+            account_info_to_meta_non_signer(&account_infos[1]),
+            account_info_to_meta_non_signer(&account_infos[2]),
             AccountMeta::new(check_required_pda, false),
         ];
 
