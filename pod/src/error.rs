@@ -17,7 +17,7 @@ use {
     num_enum::TryFromPrimitive,
     num_derive::FromPrimitive,
 )]
-pub enum PodSliceError {
+pub enum SplPodError {
     /// Error in checked math operation
     #[error("Error in checked math operation")]
     CalculationFailure,
@@ -27,9 +27,12 @@ pub enum PodSliceError {
     /// Provided byte buffer too large for expected type
     #[error("Provided byte buffer too large for expected type")]
     BufferTooLarge,
-    /// An invalid argument was provided
-    #[error("An invalid argument was provided")]
-    InvalidArgument,
+    /// Index out of range for list operation
+    #[error("Index out of range for list operation")]
+    IndexOutOfRange,
+    /// Type used as a length prefix has invalid alignment
+    #[error("Type used as a length prefix has invalid alignment")]
+    InvalidLengthTypeAlignment,
     /// A `PodCast` operation from `bytemuck` failed
     #[error("A `PodCast` operation from `bytemuck` failed")]
     PodCast,
@@ -38,41 +41,41 @@ pub enum PodSliceError {
     ValueOutOfRange,
 }
 
-impl From<PodSliceError> for ProgramError {
-    fn from(e: PodSliceError) -> Self {
+impl From<SplPodError> for ProgramError {
+    fn from(e: SplPodError) -> Self {
         ProgramError::Custom(e as u32)
     }
 }
 
-impl ToStr for PodSliceError {
+impl ToStr for SplPodError {
     fn to_str(&self) -> &'static str {
         match self {
-            PodSliceError::CalculationFailure => "Error in checked math operation",
-            PodSliceError::BufferTooSmall => "Provided byte buffer too small for expected type",
-            PodSliceError::BufferTooLarge => "Provided byte buffer too large for expected type",
-            PodSliceError::InvalidArgument => "An invalid argument was provided",
-            PodSliceError::PodCast => "A `PodCast` operation from `bytemuck` failed",
-            PodSliceError::ValueOutOfRange => "An integer conversion failed because the value was out of range for the target type",
+            SplPodError::CalculationFailure => "Error in checked math operation",
+            SplPodError::BufferTooSmall => "Provided byte buffer too small for expected type",
+            SplPodError::BufferTooLarge => "Provided byte buffer too large for expected type",
+            SplPodError::IndexOutOfRange => "Index out of range for list operation",
+            SplPodError::InvalidLengthTypeAlignment => "Type used as a length prefix has invalid alignment",
+            SplPodError::PodCast => "A `PodCast` operation from `bytemuck` failed",
+            SplPodError::ValueOutOfRange => "An integer conversion failed because the value was out of range for the target type",
         }
     }
 }
 
-impl From<PodCastError> for PodSliceError {
+impl From<PodCastError> for SplPodError {
     fn from(_: PodCastError) -> Self {
-        PodSliceError::PodCast
+        SplPodError::PodCast
     }
 }
 
-impl From<TryFromIntError> for PodSliceError {
+impl From<TryFromIntError> for SplPodError {
     fn from(_: TryFromIntError) -> Self {
-        PodSliceError::ValueOutOfRange
+        SplPodError::ValueOutOfRange
     }
 }
 
-impl From<PodSliceError> for PinocchioProgramError {
-    fn from(e: PodSliceError) -> Self {
-        let solana_err: ProgramError = e.into();
-        u64::from(solana_err).into()
+impl From<SplPodError> for PinocchioProgramError {
+    fn from(e: SplPodError) -> Self {
+        PinocchioProgramError::Custom(e as u32)
     }
 }
 
@@ -97,7 +100,7 @@ mod test {
         let result = raises_solana_err();
         assert!(result.is_err());
         let solana_err = result.unwrap_err();
-        let expected_err: ProgramError = PodSliceError::CalculationFailure.into();
+        let expected_err: ProgramError = SplPodError::CalculationFailure.into();
         assert_eq!(solana_err, expected_err);
     }
 
@@ -106,7 +109,7 @@ mod test {
         let result = raises_pino_err();
         assert!(result.is_err());
         let pinocchio_err = result.unwrap_err();
-        let expected_solana_err: ProgramError = PodSliceError::CalculationFailure.into();
+        let expected_solana_err: ProgramError = SplPodError::CalculationFailure.into();
         let expected_pinocchio_err: PinocchioProgramError = u64::from(expected_solana_err).into();
         assert_eq!(pinocchio_err, expected_pinocchio_err);
     }

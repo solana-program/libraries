@@ -220,7 +220,7 @@ impl<'de> Deserialize<'de> for OptionalNonZeroElGamalPubkey {
 mod tests {
     use {
         super::*,
-        crate::{bytemuck::pod_from_bytes, error::PodSliceError},
+        crate::{bytemuck::pod_from_bytes, error::SplPodError},
         base64::{prelude::BASE64_STANDARD, Engine},
         solana_pubkey::PUBKEY_BYTES,
     };
@@ -241,15 +241,15 @@ mod tests {
         );
         assert_eq!(
             pod_from_bytes::<OptionalNonZeroPubkey>(&[]).unwrap_err(),
-            PodSliceError::PodCast
+            SplPodError::PodCast
         );
         assert_eq!(
             pod_from_bytes::<OptionalNonZeroPubkey>(&[0; 1]).unwrap_err(),
-            PodSliceError::PodCast
+            SplPodError::PodCast
         );
         assert_eq!(
             pod_from_bytes::<OptionalNonZeroPubkey>(&[1; 1]).unwrap_err(),
-            PodSliceError::PodCast
+            SplPodError::PodCast
         );
     }
 

@@ -1,5 +1,5 @@
 use {
-    crate::{error::PodSliceError, list::ListView, pod_length::PodLength},
+    crate::{error::SplPodError, list::ListView, pod_length::PodLength},
     bytemuck::Pod,
     std::ops::Deref,
 };
@@ -16,12 +16,12 @@ pub trait List: Deref<Target = [Self::Item]> {
     fn capacity(&self) -> usize;
 
     /// Returns the number of **bytes currently occupied** by the live elements
-    fn bytes_used(&self) -> Result<usize, PodSliceError> {
+    fn bytes_used(&self) -> Result<usize, SplPodError> {
         ListView::<Self::Item, Self::Length>::size_of(self.len())
     }
 
     /// Returns the number of **bytes reserved** by the entire backing buffer.
-    fn bytes_allocated(&self) -> Result<usize, PodSliceError> {
+    fn bytes_allocated(&self) -> Result<usize, SplPodError> {
         ListView::<Self::Item, Self::Length>::size_of(self.capacity())
     }
 }

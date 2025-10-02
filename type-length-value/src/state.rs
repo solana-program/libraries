@@ -612,7 +612,7 @@ mod test {
     use {
         super::*,
         bytemuck::{Pod, Zeroable},
-        spl_pod::error::PodSliceError,
+        spl_pod::error::SplPodError,
     };
 
     const TEST_BUFFER: &[u8] = &[
@@ -737,7 +737,7 @@ mod test {
         let state = TlvStateMut::unpack(&mut buffer).unwrap();
         assert_eq!(
             state.get_first_value::<TestValue>(),
-            Err(PodSliceError::PodCast.into())
+            Err(SplPodError::PodCast.into())
         );
 
         // data buffer is too small for type
@@ -980,7 +980,7 @@ mod test {
         let data = state.alloc::<TestValue>(tlv_size, false).unwrap().0;
         assert_eq!(
             pod_from_bytes_mut::<TestValue>(data).unwrap_err(),
-            PodSliceError::PodCast,
+            SplPodError::PodCast,
         );
 
         // can't double alloc
@@ -1003,7 +1003,7 @@ mod test {
         // not enough room
         assert_eq!(
             pod_from_bytes_mut::<TestValue>(data).unwrap_err(),
-            PodSliceError::PodCast,
+            SplPodError::PodCast,
         );
 
         // Can alloc again!
