@@ -214,7 +214,7 @@ pub trait TlvState {
         repetition_number: usize,
     ) -> Result<&V, ProgramError> {
         let data = get_bytes::<V>(self.get_data(), repetition_number)?;
-        Ok(pod_from_bytes::<V>(data)?)
+        pod_from_bytes::<V>(data)
     }
 
     /// Unpack a portion of the TLV data as the desired Pod type for the first
@@ -331,7 +331,7 @@ impl<'data> TlvStateMut<'data> {
         repetition_number: usize,
     ) -> Result<&mut V, ProgramError> {
         let data = self.get_bytes_with_repetition_mut::<V>(repetition_number)?;
-        Ok(pod_from_bytes_mut::<V>(data)?)
+        pod_from_bytes_mut::<V>(data)
     }
 
     /// Unpack a portion of the TLV data as the desired type that allows
@@ -612,7 +612,6 @@ mod test {
     use {
         super::*,
         bytemuck::{Pod, Zeroable},
-        spl_pod::error::SplPodError,
     };
 
     const TEST_BUFFER: &[u8] = &[
@@ -737,7 +736,7 @@ mod test {
         let state = TlvStateMut::unpack(&mut buffer).unwrap();
         assert_eq!(
             state.get_first_value::<TestValue>(),
-            Err(SplPodError::PodCast.into())
+            Err(ProgramError::InvalidArgument)
         );
 
         // data buffer is too small for type
@@ -980,7 +979,7 @@ mod test {
         let data = state.alloc::<TestValue>(tlv_size, false).unwrap().0;
         assert_eq!(
             pod_from_bytes_mut::<TestValue>(data).unwrap_err(),
-            SplPodError::PodCast,
+            ProgramError::InvalidArgument,
         );
 
         // can't double alloc
@@ -1003,7 +1002,7 @@ mod test {
         // not enough room
         assert_eq!(
             pod_from_bytes_mut::<TestValue>(data).unwrap_err(),
-            SplPodError::PodCast,
+            ProgramError::InvalidArgument,
         );
 
         // Can alloc again!
