@@ -75,16 +75,8 @@ impl Parse for SplProgramErrorArgs {
 /// Parser for args to the `#[spl_program_error]` attribute.
 /// For example, `#[spl_program_error(hash_error_code_start = 1275525928)]`.
 enum SplProgramErrorArgParser {
-    HashErrorCodes {
-        _equals_sign: Token![=],
-        value: LitInt,
-        _comma: Option<Comma>,
-    },
-    SolanaProgramErrorCrate {
-        _equals_sign: Token![=],
-        value: LitStr,
-        _comma: Option<Comma>,
-    },
+    HashErrorCodes { value: LitInt },
+    SolanaProgramErrorCrate { value: LitStr },
 }
 
 impl Parse for SplProgramErrorArgParser {
@@ -95,21 +87,13 @@ impl Parse for SplProgramErrorArgParser {
                 let _equals_sign = input.parse::<Token![=]>()?;
                 let value = input.parse::<LitInt>()?;
                 let _comma: Option<Comma> = input.parse().unwrap_or(None);
-                Ok(Self::HashErrorCodes {
-                    _equals_sign,
-                    value,
-                    _comma,
-                })
+                Ok(Self::HashErrorCodes { value })
             }
             "solana_program_error" => {
                 let _equals_sign = input.parse::<Token![=]>()?;
                 let value = input.parse::<LitStr>()?;
                 let _comma: Option<Comma> = input.parse().unwrap_or(None);
-                Ok(Self::SolanaProgramErrorCrate {
-                    _equals_sign,
-                    value,
-                    _comma,
-                })
+                Ok(Self::SolanaProgramErrorCrate { value })
             }
             _ => {
                 Err(input

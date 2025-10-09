@@ -14,14 +14,13 @@ use {
 /// `#[discriminator_hash_input("...")]`
 struct HashInputValueParser {
     value: LitStr,
-    _comma: Option<Comma>,
 }
 
 impl Parse for HashInputValueParser {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let value: LitStr = input.parse()?;
         let _comma: Option<Comma> = input.parse().unwrap_or(None);
-        Ok(HashInputValueParser { value, _comma })
+        Ok(HashInputValueParser { value })
     }
 }
 
