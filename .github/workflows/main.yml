@@ -6,160 +6,46 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  JS_PACKAGES: "['type-length-value-js']"
+  SBPF_PROGRAM_PACKAGES: "['discriminator', 'generic-token', 'pod', 'program-error', 'tlv-account-resolution', 'type-length-value']"
+  RUST_PACKAGES: "['discriminator', 'discriminator-derive', 'discriminator-syn', 'generic-token', 'generic-token-tests', 'pod', 'program-error', 'program-error-derive', 'tlv-account-resolution', 'type-length-value', 'type-length-value-derive', 'type-length-value-derive-test']"
+  WASM_PACKAGES: "['discriminator', 'generic-token', 'pod', 'program-error', 'tlv-account-resolution', 'type-length-value']"
+
 jobs:
-  format_and_lint_rust:
-    name: Format & Lint Rust
+  set_env:
+    name: Set variables to be used in strategy definitions in reusable workflow
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        library: [discriminator, generic-token, generic-token-tests, pod, program-error, tlv-account-resolution, type-length-value, type-length-value-derive-test]
+    outputs:
+      JS_PACKAGES: ${{ steps.compute.outputs.JS_PACKAGES }}
+      SBPF_PROGRAM_PACKAGES: ${{ steps.compute.outputs.SBPF_PROGRAM_PACKAGES }}
+      RUST_PACKAGES: ${{ steps.compute.outputs.RUST_PACKAGES }}
+      WASM_PACKAGES: ${{ steps.compute.outputs.WASM_PACKAGES }}
+      RUST_TOOLCHAIN_NIGHTLY: ${{ steps.compute.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          clippy: true
-          rustfmt: true
+      - name: Compute variables
+        id: compute
+        shell: bash
+        run: |
+          echo "JS_PACKAGES=${{ env.JS_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "SBPF_PROGRAM_PACKAGES=${{ env.SBPF_PROGRAM_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "RUST_PACKAGES=${{ env.RUST_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "WASM_PACKAGES=${{ env.WASM_PACKAGES }}" >> $GITHUB_OUTPUT
+          echo "RUST_TOOLCHAIN_NIGHTLY=$(make rust-toolchain-nightly)" >> "$GITHUB_OUTPUT"
+          echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
 
-      - name: Format
-        run: pnpm ${{ matrix.library }}:format
-
-      - name: Lint
-        run: pnpm ${{ matrix.library }}:lint
-
-  format_and_lint_js:
-    name: Format & Lint JS
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        library: [type-length-value]
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-
-      - name: Format
-        run: pnpm ${{ matrix.library }}:js:format
-
-      - name: Lint
-        run: pnpm ${{ matrix.library }}:js:lint
-
-  audit_rust:
-    name: Audit Rust
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-audit
-
-      - name: Install cargo-audit
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-audit
-
-      - name: Run cargo-audit
-        run: pnpm rust:audit
-
-  spellcheck_rust:
-    name: Spellcheck Rust
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-spellcheck
-
-      - name: Install cargo-spellcheck
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-spellcheck
-
-      - name: Run cargo-spellcheck
-        run: pnpm rust:spellcheck
-
-  build_sbf:
-    name: Build SBF
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        library: [discriminator, generic-token, pod, program-error, tlv-account-resolution, type-length-value, type-length-value-derive-test]
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-build-${{ matrix.library }}
-          solana: true
-
-      - name: Build
-        run: pnpm ${{ matrix.library }}:build
-
-  hack_rust:
-    name: Check Powerset
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          nightly-toolchain: true
-          cargo-cache-key: cargo-hack-check
-          cargo-cache-fallback-key: cargo-hack
-
-      - name: Install cargo-hack
-        uses: taiki-e/cache-cargo-install-action@v2
-        with:
-          tool: cargo-hack
-
-      - name: Hack check
-        run: pnpm rust:hack
-
-  test_rust:
-    name: Test Rust
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        library: [discriminator, generic-token, generic-token-tests, pod, program-error, tlv-account-resolution, type-length-value, type-length-value-derive-test]
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-        with:
-          cargo-cache-key: cargo-${{ matrix.library }}-tests
-          cargo-cache-fallback-key: cargo-${{ matrix.library }}
-
-      - name: Test
-        run: pnpm ${{ matrix.library }}:test
-
-  test_js:
-    name: Test JS
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        library: [type-length-value]
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup
-
-      - name: Test
-        run: pnpm ${{ matrix.library }}:js:test
+  main:
+    needs: set_env
+    uses: solana-program/actions/.github/workflows/main.yml@main
+    with:
+      js-packages: ${{ needs.set_env.outputs.JS_PACKAGES }}
+      sbpf-program-packages: ${{ needs.set_env.outputs.SBPF_PROGRAM_PACKAGES }}
+      rust-packages: ${{ needs.set_env.outputs.RUST_PACKAGES }}
+      wasm-packages: ${{ needs.set_env.outputs.WASM_PACKAGES }}
+      rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}

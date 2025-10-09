@@ -13,7 +13,7 @@ num_enum = "0.7"
 num-traits = "0.2"
 solana-msg = "3.0.0"
 solana-program-error = "3.0.0"
-spl-program-error-derive = { version = "0.6.0", path = "./derive" }
+spl-program-error-derive = { version = "0.6.0", path = "../program-error-derive" }
 thiserror = "2.0"
 
 [dev-dependencies]
