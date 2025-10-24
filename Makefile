@@ -1,0 +1,107 @@
+RUST_TOOLCHAIN_NIGHTLY = nightly-2025-02-16
+SOLANA_CLI_VERSION = 2.3.4
+
+nightly = +${RUST_TOOLCHAIN_NIGHTLY}
+
+make-path = $1
+
+rust-toolchain-nightly:
+	@echo ${RUST_TOOLCHAIN_NIGHTLY}
+
+solana-cli-version:
+	@echo ${SOLANA_CLI_VERSION}
+
+cargo-nightly:
+	cargo $(nightly) $(ARGS)
+
+# Keep js entries early in the list because Mac's version of Make will fail to
+# find them otherwise.
+format-check-js-%:
+	cd $(call make-path,$*) && pnpm install --frozen-lockfile && pnpm format $(ARGS)
+
+lint-js-%:
+	cd $(call make-path,$*) && pnpm install --frozen-lockfile && pnpm lint $(ARGS)
+
+test-js-%:
+	cd $(call make-path,$*) && pnpm install --frozen-lockfile && pnpm build && pnpm test $(ARGS)
+
+audit:
+	cargo audit \
+			--ignore RUSTSEC-2022-0093 \
+			--ignore RUSTSEC-2024-0421 \
+			--ignore RUSTSEC-2024-0344 \
+			--ignore RUSTSEC-2024-0376 $(ARGS)
+
+spellcheck:
+	cargo spellcheck --code 1 $(ARGS)
+
+clippy-%:
+	cargo $(nightly) clippy --manifest-path $(call make-path,$*)/Cargo.toml \
+	  --all-targets \
+	  --all-features \
+		-- \
+		--deny=warnings \
+		--deny=clippy::default_trait_access \
+		--deny=clippy::arithmetic_side_effects \
+		--deny=clippy::manual_let_else \
+		--deny=clippy::used_underscore_binding $(ARGS)
+
+format-check-%:
+	cargo $(nightly) fmt --check --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+powerset-%:
+	cargo $(nightly) hack check --feature-powerset --all-targets --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+semver-check-%:
+	cargo semver-checks --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+shellcheck:
+	git ls-files -- '*.sh' | xargs shellcheck --color=always --external-sources --shell=bash $(ARGS)
+
+sort-check:
+	cargo $(nightly) sort --workspace --check $(ARGS)
+
+bench-%:
+	cargo $(nightly) bench --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+format-rust:
+	cargo $(nightly) fmt --all $(ARGS)
+
+build-sbf-%:
+	cargo build-sbf --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+build-wasm-%:
+	cargo build --target wasm32-unknown-unknown --manifest-path $(call make-path,$*)/Cargo.toml --all-features $(ARGS)
+
+build-doc-%:
+	RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo $(nightly) doc --all-features --no-deps --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+test-doc-%:
+	cargo $(nightly) test --doc --all-features --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+test-%:
+	SBF_OUT_DIR=$(PWD)/target/deploy cargo $(nightly) test --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+generate-clients:
+	@echo "No clients to generate"
+
+# Helpers for publishing
+tag-name = $(lastword $(subst /, ,$(call make-path,$1)))
+preid-arg = $(subst pre,--preid $2,$(findstring pre,$1))
+package-version = $(subst ",,$(shell jq -r '.version' $(call make-path,$1)/package.json))
+crate-version = $(subst ",,$(shell toml get $(call make-path,$1)/Cargo.toml package.version))
+
+git-tag-js-%:
+	@echo "$(call tag-name,$*)@v$(call package-version,$*)"
+
+publish-js-%:
+	cd "$(call make-path,$*)" && pnpm install --frozen-lockfile && pnpm version $(LEVEL) --no-git-tag-version  $(call preid-arg,$(LEVEL),$(TAG)) && pnpm publish --no-git-checks --tag $(TAG)
+
+git-tag-rust-%:
+	@echo "$(call tag-name,$*)@v$(call crate-version,$*)"
+
+publish-rust-%:
+	cd "$(call make-path,$*)" && cargo release $(LEVEL) --tag-name "$(call tag-name,$*)@v{{version}}" --execute --no-confirm --dependent-version fix
+
+publish-rust-dry-run-%:
+	cd "$(call make-path,$*)" && cargo release $(LEVEL) --tag-name "$(call tag-name,$*)@v{{version}}"

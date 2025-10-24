@@ -2,16 +2,16 @@
 resolver = "2"
 members = [
   "discriminator",
-  "discriminator/derive",
-  "discriminator/syn",
+  "discriminator-derive",
+  "discriminator-syn",
   "generic-token",
   "generic-token-tests",
   "pod",
   "program-error",
-  "program-error/derive",
+  "program-error-derive",
   "tlv-account-resolution",
   "type-length-value",
-  "type-length-value/derive",
+  "type-length-value-derive",
   "type-length-value-derive-test",
 ]
 
