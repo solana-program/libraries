@@ -14,6 +14,17 @@ solana-cli-version:
 cargo-nightly:
 	cargo $(nightly) $(ARGS)
 
+# Keep js entries early in the list because Mac's version of Make will fail to
+# find them otherwise.
+format-check-js-%:
+	cd $(call make-path,$*) && pnpm install --frozen-lockfile && pnpm format $(ARGS)
+
+lint-js-%:
+	cd $(call make-path,$*) && pnpm install --frozen-lockfile && pnpm lint $(ARGS)
+
+test-js-%:
+	cd $(call make-path,$*) && pnpm install --frozen-lockfile && pnpm build && pnpm test $(ARGS)
+
 audit:
 	cargo audit \
 			--ignore RUSTSEC-2022-0093 \
@@ -71,15 +82,6 @@ test-doc-%:
 test-%:
 	SBF_OUT_DIR=$(PWD)/target/deploy cargo $(nightly) test --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
-format-check-js-%:
-	cd $(call make-path,$*) && pnpm install && pnpm format $(ARGS)
-
-lint-js-%:
-	cd $(call make-path,$*) && pnpm install && pnpm lint $(ARGS)
-
-test-js-%:
-	cd $(call make-path,$*) && pnpm install && pnpm build && pnpm test $(ARGS)
-
 generate-clients:
 	@echo "No clients to generate"
 
@@ -93,7 +95,7 @@ git-tag-js-%:
 	@echo "$(call tag-name,$*)@v$(call package-version,$*)"
 
 publish-js-%:
-	cd "$(call make-path,$*)" && pnpm install && pnpm version $(LEVEL) --no-git-tag-version  $(call preid-arg,$(LEVEL),$(TAG)) && pnpm publish --no-git-checks --tag $(TAG)
+	cd "$(call make-path,$*)" && pnpm install --frozen-lockfile && pnpm version $(LEVEL) --no-git-tag-version  $(call preid-arg,$(LEVEL),$(TAG)) && pnpm publish --no-git-checks --tag $(TAG)
 
 git-tag-rust-%:
 	@echo "$(call tag-name,$*)@v$(call crate-version,$*)"
