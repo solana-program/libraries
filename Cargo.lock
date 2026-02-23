@@ -1624,6 +1624,7 @@ dependencies = [
  "solana-program-option",
  "solana-pubkey",
  "solana-zk-sdk",
+ "spl-pod 0.7.1",
  "test-case",
  "thiserror 2.0.18",
  "wincode",
