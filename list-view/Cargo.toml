@@ -1,0 +1,19 @@
+[package]
+name = "spl-list-view"
+version = "0.1.0"
+description = "ListView: a zero-copy, variable-length array view"
+authors = ["Anza Maintainers <maintainers@anza.xyz>"]
+repository = "https://github.com/solana-program/libraries"
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+bytemuck = "1.25.0"
+solana-program-error = "3.0.0"
+spl-pod = { version = "0.7.2", path = "../pod" }
+
+[dev-dependencies]
+bytemuck_derive = "1.10.2"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

@@ -7,10 +7,8 @@ use {
     solana_program_error::ProgramError,
     solana_pubkey::Pubkey,
     spl_discriminator::SplDiscriminate,
-    spl_pod::{
-        list::{self, ListView},
-        primitives::PodU32,
-    },
+    spl_list_view::{ListView, ListViewReadOnly},
+    spl_pod::primitives::PodU32,
     spl_type_length_value::state::{TlvState, TlvStateBorrowed, TlvStateMut},
     std::future::Future,
 };
@@ -191,7 +189,7 @@ impl ExtraAccountMetaList {
     /// `TlvStateBorrowed`. I hope there's a better way to do this!
     pub fn unpack_with_tlv_state<'a, T: SplDiscriminate>(
         tlv_state: &'a TlvStateBorrowed,
-    ) -> Result<list::ListViewReadOnly<'a, ExtraAccountMeta, PodU32>, ProgramError> {
+    ) -> Result<ListViewReadOnly<'a, ExtraAccountMeta, PodU32>, ProgramError> {
         let bytes = tlv_state.get_first_bytes::<T>()?;
         ListView::<ExtraAccountMeta>::unpack(bytes)
     }

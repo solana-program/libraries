@@ -8,9 +8,9 @@ on:
 
 env:
   JS_PACKAGES: "['type-length-value-js']"
-  SBPF_PROGRAM_PACKAGES: "['discriminator', 'generic-token', 'pod', 'program-error', 'tlv-account-resolution', 'type-length-value']"
-  RUST_PACKAGES: "['discriminator', 'discriminator-derive', 'discriminator-syn', 'generic-token', 'generic-token-tests', 'pod', 'program-error', 'program-error-derive', 'tlv-account-resolution', 'type-length-value', 'type-length-value-derive', 'type-length-value-derive-test']"
-  WASM_PACKAGES: "['discriminator', 'generic-token', 'pod', 'program-error', 'tlv-account-resolution', 'type-length-value']"
+  SBPF_PROGRAM_PACKAGES: "['discriminator', 'generic-token', 'list-view', 'pod', 'program-error', 'tlv-account-resolution', 'type-length-value']"
+  RUST_PACKAGES: "['discriminator', 'discriminator-derive', 'discriminator-syn', 'generic-token', 'generic-token-tests', 'list-view', 'pod', 'program-error', 'program-error-derive', 'tlv-account-resolution', 'type-length-value', 'type-length-value-derive', 'type-length-value-derive-test']"
+  WASM_PACKAGES: "['discriminator', 'generic-token', 'list-view', 'pod', 'program-error', 'tlv-account-resolution', 'type-length-value']"
 
 jobs:
   set_env:

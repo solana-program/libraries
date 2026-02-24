@@ -1,12 +1,11 @@
 //! `ListViewMut`, a mutable, compact, zero-copy array wrapper.
 
 use {
-    crate::{
-        error::PodSliceError, list::list_trait::List, pod_length::PodLength, primitives::PodU32,
-    },
+    crate::list_trait::List,
     bytemuck::Pod,
     core::ops::{Deref, DerefMut},
     solana_program_error::ProgramError,
+    spl_pod::{error::PodSliceError, pod_length::PodLength, primitives::PodU32},
 };
 
 #[derive(Debug)]
@@ -82,11 +81,9 @@ impl<T: Pod, L: PodLength> List for ListViewMut<'_, T, L> {
 mod tests {
     use {
         super::*,
-        crate::{
-            list::{List, ListView},
-            primitives::{PodU16, PodU32, PodU64},
-        },
+        crate::{List, ListView},
         bytemuck_derive::{Pod, Zeroable},
+        spl_pod::primitives::{PodU16, PodU32, PodU64},
     };
 
     #[repr(C)]

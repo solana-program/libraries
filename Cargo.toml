@@ -6,6 +6,7 @@ members = [
   "discriminator-syn",
   "generic-token",
   "generic-token-tests",
+  "list-view",
   "pod",
   "program-error",
   "program-error-derive",
