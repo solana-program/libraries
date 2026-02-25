@@ -6,8 +6,9 @@
 //! [`Option<NonZeroU64>`](https://doc.rust-lang.org/std/num/type.NonZeroU64.html)
 //! and provide the same memory layout optimization.
 
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 use {
-    bytemuck::{Pod, Zeroable},
     solana_address::{Address, ADDRESS_BYTES},
     solana_program_error::ProgramError,
     solana_program_option::COption,
@@ -17,7 +18,7 @@ use {
 ///
 /// This trait is used to indicate that a type can be `None` according to a
 /// specific value.
-pub trait Nullable: PartialEq + Pod + Sized {
+pub trait Nullable: PartialEq + Copy + Sized {
     /// Value that represents `None` for the type.
     const NONE: Self;
 
@@ -83,13 +84,15 @@ impl<T: Nullable> PodOption<T> {
 ///
 /// `PodOption` is a transparent wrapper around a `Pod` type `T` with identical
 /// data representation.
-unsafe impl<T: Nullable> Pod for PodOption<T> {}
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Nullable + Pod> Pod for PodOption<T> {}
 
 /// ## Safety
 ///
 /// `PodOption` is a transparent wrapper around a `Pod` type `T` with identical
 /// data representation.
-unsafe impl<T: Nullable> Zeroable for PodOption<T> {}
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Nullable + Zeroable> Zeroable for PodOption<T> {}
 
 impl<T: Nullable> From<T> for PodOption<T> {
     fn from(value: T) -> Self {
@@ -128,9 +131,12 @@ impl Nullable for Address {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::bytemuck::pod_slice_from_bytes};
+    use super::*;
+    #[cfg(feature = "bytemuck")]
+    use crate::bytemuck::pod_slice_from_bytes;
     const ID: Address = Address::from_str_const("TestSysvar111111111111111111111111111111111");
 
+    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_option_address() {
         let some_address = PodOption::from(ID);
