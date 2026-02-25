@@ -129,11 +129,7 @@ impl<'de> Deserialize<'de> for OptionalNonZeroPubkey {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        crate::bytemuck::pod_from_bytes,
-        solana_address::ADDRESS_BYTES,
-    };
+    use {super::*, crate::bytemuck::pod_from_bytes, solana_address::ADDRESS_BYTES};
 
     #[test]
     fn test_pod_non_zero_option() {
