@@ -1,7 +1,10 @@
 //! `ListView`, a compact, zero-copy array wrapper.
 
 use {
-    crate::{list_view_mut::ListViewMut, list_view_read_only::ListViewReadOnly},
+    crate::{
+        error::ListViewError, list_view_mut::ListViewMut, list_view_read_only::ListViewReadOnly,
+        pod_length::PodLength,
+    },
     bytemuck::Pod,
     core::{
         marker::PhantomData,
@@ -13,8 +16,6 @@ use {
         bytemuck::{
             pod_from_bytes, pod_from_bytes_mut, pod_slice_from_bytes, pod_slice_from_bytes_mut,
         },
-        error::PodSliceError,
-        pod_length::PodLength,
         primitives::PodU32,
     },
 };
@@ -57,7 +58,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
             .checked_mul(num_items)
             .and_then(|curr| curr.checked_add(size_of::<L>()))
             .and_then(|curr| curr.checked_add(header_padding))
-            .ok_or_else(|| PodSliceError::CalculationFailure.into())
+            .ok_or_else(|| ListViewError::CalculationFailure.into())
     }
 
     /// Unpack a read-only buffer into a `ListViewReadOnly`
@@ -79,7 +80,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
         let capacity = data.len();
 
         if (*length).into() > capacity {
-            return Err(PodSliceError::BufferTooSmall.into());
+            return Err(ListViewError::BufferTooSmall.into());
         }
 
         Ok(ListViewReadOnly {
@@ -93,7 +94,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     pub fn unpack_mut(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
         let view = Self::build_mut_view(buf)?;
         if (*view.length).into() > view.capacity {
-            return Err(PodSliceError::BufferTooSmall.into());
+            return Err(ListViewError::BufferTooSmall.into());
         }
         Ok(view)
     }
@@ -101,7 +102,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     /// Initialize a buffer: sets `length = 0` and returns a mutable `ListViewMut`.
     pub fn init(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
         let view = Self::build_mut_view(buf)?;
-        *view.length = L::try_from(0)?;
+        *view.length = L::try_from(0usize).map_err(ListViewError::from)?;
         Ok(view)
     }
 
@@ -139,7 +140,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
         let data_start = len_field_end.saturating_add(header_padding);
 
         if buf_len < data_start {
-            return Err(PodSliceError::BufferTooSmall.into());
+            return Err(ListViewError::BufferTooSmall.into());
         }
 
         Ok(Layout {
@@ -238,12 +239,12 @@ mod tests {
         // Case 1: Multiplication overflows.
         // `size_of::<u16>() * usize::MAX` will overflow.
         let err = ListView::<u16, PodU32>::size_of(usize::MAX).unwrap_err();
-        assert_eq!(err, PodSliceError::CalculationFailure.into());
+        assert_eq!(err, ListViewError::CalculationFailure.into());
 
         // Case 2: Multiplication does not overflow, but subsequent addition does.
         // `size_of::<u8>() * usize::MAX` does not overflow, but adding `size_of<L>` will.
         let err = ListView::<u8, PodU32>::size_of(usize::MAX).unwrap_err();
-        assert_eq!(err, PodSliceError::CalculationFailure.into());
+        assert_eq!(err, ListViewError::CalculationFailure.into());
     }
 
     #[test]
@@ -260,7 +261,7 @@ mod tests {
             }
         }
         impl TryFrom<usize> for TestPodU32 {
-            type Error = PodSliceError;
+            type Error = core::num::TryFromIntError;
             fn try_from(val: usize) -> Result<Self, Self::Error> {
                 Ok(Self(u32::try_from(val)?))
             }
@@ -443,10 +444,10 @@ mod tests {
         let mut buf = vec![0u8; header_size - 1]; // 7 bytes
 
         let err = ListView::<u64, PodU32>::unpack(&buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
 
         let err = ListView::<u64, PodU32>::unpack_mut(&mut buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
     }
 
     #[test]
@@ -463,10 +464,10 @@ mod tests {
         buf[0..len_size].copy_from_slice(bytemuck::bytes_of(&pod_len));
 
         let err = ListView::<u32, PodU32>::unpack(&buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
 
         let err = ListView::<u32, PodU32>::unpack_mut(&mut buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
     }
 
     #[test]
@@ -490,10 +491,10 @@ mod tests {
     fn test_unpack_empty_buffer() {
         let mut buf = [];
         let err = ListView::<u32, PodU32>::unpack(&buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
 
         let err = ListView::<u32, PodU32>::unpack_mut(&mut buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
     }
 
     #[test]
@@ -560,12 +561,12 @@ mod tests {
         // Header requires 4 bytes (size_of<PodU32>)
         let mut buf = vec![0u8; 3];
         let err = ListView::<u32, PodU32>::init(&mut buf).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
 
         // With padding, header requires 8 bytes (4 for len, 4 for pad)
         let mut buf_padded = vec![0u8; 7];
         let err_padded = ListView::<u64, PodU32>::init(&mut buf_padded).unwrap_err();
-        assert_eq!(err_padded, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err_padded, ListViewError::BufferTooSmall.into());
     }
 
     #[test]

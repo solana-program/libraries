@@ -1,11 +1,11 @@
 //! `ListViewMut`, a mutable, compact, zero-copy array wrapper.
 
 use {
-    crate::list_trait::List,
+    crate::{error::ListViewError, list_trait::List, pod_length::PodLength},
     bytemuck::Pod,
     core::ops::{Deref, DerefMut},
     solana_program_error::ProgramError,
-    spl_pod::{error::PodSliceError, pod_length::PodLength, primitives::PodU32},
+    spl_pod::primitives::PodU32,
 };
 
 #[derive(Debug)]
@@ -20,10 +20,10 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
     pub fn push(&mut self, item: T) -> Result<(), ProgramError> {
         let length = (*self.length).into();
         if length >= self.capacity {
-            Err(PodSliceError::BufferTooSmall.into())
+            Err(ListViewError::BufferTooSmall.into())
         } else {
             self.data[length] = item;
-            *self.length = L::try_from(length.saturating_add(1))?;
+            *self.length = L::try_from(length.saturating_add(1)).map_err(ListViewError::from)?;
             Ok(())
         }
     }
@@ -46,7 +46,7 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
 
         // Store the new length (len - 1)
         let new_len = len.checked_sub(1).unwrap();
-        *self.length = L::try_from(new_len)?;
+        *self.length = L::try_from(new_len).map_err(ListViewError::from)?;
 
         Ok(removed_item)
     }
@@ -144,7 +144,7 @@ mod tests {
         // Try to push beyond capacity
         let item4 = TestStruct::new(4, 40);
         let err = view.push(item4).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
 
         // Ensure state is unchanged
         assert_eq!(view.len(), 3);
@@ -277,7 +277,7 @@ mod tests {
         assert!(view.is_empty());
 
         let err = view.push(TestStruct::new(1, 1)).unwrap_err();
-        assert_eq!(err, PodSliceError::BufferTooSmall.into());
+        assert_eq!(err, ListViewError::BufferTooSmall.into());
 
         let err = view.remove(0).unwrap_err();
         assert_eq!(err, ProgramError::InvalidArgument);

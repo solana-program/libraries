@@ -9,8 +9,12 @@ edition = "2021"
 
 [dependencies]
 bytemuck = "1.25.0"
+num-derive = "0.4.2"
+num_enum = "0.7.5"
+num-traits = "0.2.19"
 solana-program-error = "3.0.0"
 spl-pod = { version = "0.7.2", path = "../pod" }
+thiserror = "2.0.18"
 
 [dev-dependencies]
 bytemuck_derive = "1.10.2"

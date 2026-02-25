@@ -1,10 +1,10 @@
 //! `ListViewReadOnly`, a read-only, compact, zero-copy array wrapper.
 
 use {
-    crate::list_trait::List,
+    crate::{list_trait::List, pod_length::PodLength},
     bytemuck::Pod,
     core::ops::Deref,
-    spl_pod::{pod_length::PodLength, primitives::PodU32},
+    spl_pod::primitives::PodU32,
 };
 
 #[derive(Debug)]
@@ -39,10 +39,7 @@ mod tests {
         crate::ListView,
         bytemuck_derive::{Pod as DerivePod, Zeroable},
         core::mem::size_of,
-        spl_pod::{
-            pod_length::PodLength,
-            primitives::{PodU32, PodU64},
-        },
+        spl_pod::primitives::{PodU32, PodU64},
     };
 
     #[repr(C, align(16))]
