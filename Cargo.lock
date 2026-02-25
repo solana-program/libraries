@@ -1552,6 +1552,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spl-collections"
+version = "0.0.0"
+dependencies = [
+ "borsh",
+ "spl-collections",
+ "wincode",
+]
+
+[[package]]
 name = "spl-discriminator"
 version = "0.5.1"
 dependencies = [
