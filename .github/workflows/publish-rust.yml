@@ -13,6 +13,7 @@ on:
           - discriminator-derive
           - discriminator-syn
           - generic-token
+          - list-view
           - pod
           - program-error
           - program-error-derive

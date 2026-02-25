@@ -1,15 +1,7 @@
 //! `ListView`, a compact, zero-copy array wrapper.
 
 use {
-    crate::{
-        bytemuck::{
-            pod_from_bytes, pod_from_bytes_mut, pod_slice_from_bytes, pod_slice_from_bytes_mut,
-        },
-        error::PodSliceError,
-        list::{list_view_mut::ListViewMut, list_view_read_only::ListViewReadOnly},
-        pod_length::PodLength,
-        primitives::PodU32,
-    },
+    crate::{list_view_mut::ListViewMut, list_view_read_only::ListViewReadOnly},
     bytemuck::Pod,
     core::{
         marker::PhantomData,
@@ -17,6 +9,14 @@ use {
         ops::Range,
     },
     solana_program_error::ProgramError,
+    spl_pod::{
+        bytemuck::{
+            pod_from_bytes, pod_from_bytes_mut, pod_slice_from_bytes, pod_slice_from_bytes_mut,
+        },
+        error::PodSliceError,
+        pod_length::PodLength,
+        primitives::PodU32,
+    },
 };
 
 /// An API for interpreting a raw buffer (`&[u8]`) as a variable-length collection of Pod elements.
@@ -185,11 +185,9 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
 mod tests {
     use {
         super::*,
-        crate::{
-            list::List,
-            primitives::{PodU128, PodU16, PodU32, PodU64},
-        },
+        crate::List,
         bytemuck_derive::{Pod as DerivePod, Zeroable},
+        spl_pod::primitives::{PodU128, PodU16, PodU32, PodU64},
     };
 
     #[test]
