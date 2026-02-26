@@ -1,12 +1,10 @@
 //! primitive types that can be used in `Pod`s
-#[cfg(feature = "borsh")]
-use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "bytemuck")]
 use bytemuck_derive::{Pod, Zeroable};
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "wincode")]
-use wincode::{SchemaRead, SchemaWrite};
+use wincode_derive::{SchemaRead, SchemaWrite};
 #[cfg(feature = "borsh")]
 use {
     alloc::string::ToString,
@@ -250,9 +248,6 @@ mod tests {
     #[test]
     fn test_pod_i16_serde() {
         let pod_i16: PodI16 = i16::MAX.into();
-
-        println!("pod_i16 {:?}", pod_i16);
-
         let serialized = serde_json::to_string(&pod_i16).unwrap();
         assert_eq!(&serialized, "32767");
 
@@ -376,8 +371,12 @@ mod tests {
         >(
             pod: T,
         ) {
-            let bytes = wincode::serialize(&pod).unwrap();
-            let deserialized: T = wincode::deserialize(&bytes).unwrap();
+            let size = wincode::serialized_size(&pod).unwrap() as usize;
+            let mut bytes = [0u8; 32];
+            assert!(size <= bytes.len());
+            wincode::serialize_into(&mut bytes[..size], &pod).unwrap();
+
+            let deserialized: T = wincode::deserialize(&bytes[..size]).unwrap();
             assert_eq!(pod, deserialized);
         }
     }
