@@ -7,6 +7,11 @@ use bytemuck_derive::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "wincode")]
 use wincode::{SchemaRead, SchemaWrite};
+#[cfg(feature = "borsh")]
+use {
+    alloc::string::ToString,
+    borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
+};
 
 /// The standard `bool` is not a `Pod`, define a replacement that is
 #[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]

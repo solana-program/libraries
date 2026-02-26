@@ -1,4 +1,9 @@
+#![cfg_attr(not(test), no_std)]
+
 //! Crate containing `Pod` types and `bytemuck` utilities used in SPL
+
+#[cfg(any(feature = "borsh", feature = "serde", feature = "wincode"))]
+extern crate alloc;
 
 #[cfg(feature = "bytemuck")]
 pub mod bytemuck;

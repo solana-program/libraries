@@ -11,7 +11,7 @@ edition = "2021"
 bytemuck = ["dep:bytemuck", "dep:bytemuck_derive", "solana-address/bytemuck"]
 serde = ["dep:serde", "solana-address/decode"]
 borsh = ["dep:borsh", "solana-address/borsh"]
-wincode = ["dep:wincode"]
+wincode = ["dep:wincode", "wincode/alloc"]
 
 [dependencies]
 borsh = { version = "1.5.7", features = ["derive", "unstable__schema"], optional = true }
