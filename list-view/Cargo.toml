@@ -13,7 +13,7 @@ num-derive = "0.4.2"
 num_enum = "0.7.5"
 num-traits = "0.2.19"
 solana-program-error = "3.0.0"
-spl-pod = { version = "0.7.2", path = "../pod" }
+spl-pod = { version = "0.7.2", path = "../pod", features = ["bytemuck"] }
 thiserror = "2.0.18"
 
 [dev-dependencies]
