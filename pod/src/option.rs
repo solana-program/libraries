@@ -18,7 +18,7 @@ use {
 ///
 /// This trait is used to indicate that a type can be `None` according to a
 /// specific value.
-pub trait Nullable: PartialEq + Copy + Sized {
+pub trait Nullable: PartialEq + Sized {
     /// Value that represents `None` for the type.
     const NONE: Self;
 
@@ -77,6 +77,24 @@ impl<T: Nullable> PodOption<T> {
         } else {
             Some(&mut self.0)
         }
+    }
+
+    /// Maps a `PodOption<T>` to an `Option<T>` by copying the contents of the option.
+    #[inline]
+    pub fn copied(&self) -> Option<T>
+    where
+        T: Copy,
+    {
+        self.as_ref().copied()
+    }
+
+    /// Maps a `PodOption<T>` to an `Option<T>` by cloning the contents of the option.
+    #[inline]
+    pub fn cloned(&self) -> Option<T>
+    where
+        T: Clone,
+    {
+        self.as_ref().cloned()
     }
 }
 
@@ -190,5 +208,30 @@ mod tests {
     fn test_default() {
         let def = PodOption::<Address>::default();
         assert_eq!(def, None.try_into().unwrap());
+    }
+
+    #[test]
+    fn test_copied() {
+        let some_address = PodOption::from(ID);
+        assert_eq!(some_address.copied(), Some(ID));
+
+        let none_address = PodOption::from(Address::NONE);
+        assert_eq!(none_address.copied(), None);
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    struct TestNonCopyNullable([u8; 4]);
+
+    impl Nullable for TestNonCopyNullable {
+        const NONE: Self = Self([0u8; 4]);
+    }
+
+    #[test]
+    fn test_cloned_with_non_copy_nullable() {
+        let some = PodOption::from(TestNonCopyNullable([1, 2, 3, 4]));
+        assert_eq!(some.cloned(), Some(TestNonCopyNullable([1, 2, 3, 4])));
+
+        let none = PodOption::from(TestNonCopyNullable::NONE);
+        assert_eq!(none.cloned(), None);
     }
 }
