@@ -9,7 +9,7 @@ edition = "2021"
 
 [features]
 bytemuck = ["dep:bytemuck", "dep:bytemuck_derive", "solana-address/bytemuck"]
-serde = ["dep:serde", "dep:serde_derive", "solana-address/decode"]
+serde = ["dep:serde", "dep:serde_derive", "solana-address/serde"]
 borsh = ["dep:borsh", "solana-address/borsh"]
 wincode = ["dep:wincode", "dep:wincode-derive"]
 
@@ -28,8 +28,8 @@ wincode-derive = { version = "0.4.2", optional = true }
 [dev-dependencies]
 base64 = { version = "0.22.1" }
 serde_json = "1.0.145"
-solana-address = { version = "2.2.0", features = ["decode"] }
-spl-pod = { path = ".", features = ["bytemuck", "wincode"] }
+solana-address = { version = "2.2.0", features = ["serde"] }
+spl-pod = { path = ".", features = ["bytemuck", "wincode", "borsh"] }
 test-case = "3.3.1"
 
 [lib]
