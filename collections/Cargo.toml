@@ -13,10 +13,8 @@ all-features = true
 rustdoc-args = ["--cfg=docsrs"]
 
 [features]
-alloc = []
-borsh = ["dep:borsh", "alloc"]
-default = ["alloc"]
-wincode = ["dep:wincode", "alloc"]
+borsh = ["dep:borsh"]
+wincode = ["dep:wincode"]
 
 [dependencies]
 borsh = { version = "1.0", features = ["derive"], default-features = false, optional = true }

@@ -29,7 +29,7 @@ use {
     core::mem::MaybeUninit,
     wincode::{
         config::ConfigCore,
-        error::write_length_encoding_overflow,
+        error::{write_length_encoding_overflow, ReadError},
         io::{Reader, Writer},
         ReadResult, SchemaRead, SchemaWrite, WriteResult,
     },
@@ -231,10 +231,14 @@ macro_rules! prefixed_vec_type {
         #[cfg(feature = "borsh")]
         impl<T: BorshDeserialize> BorshDeserialize for $name<T> {
             fn deserialize_reader<R: Read>(reader: &mut R) -> borsh::io::Result<Self> {
-                let prefix = $prefix_type::deserialize_reader(reader)?;
-                let mut items: Vec<T> = Vec::with_capacity(prefix as usize);
+                let prefix = $prefix_type::deserialize_reader(reader)? as usize;
+                let mut items: Vec<T> = Vec::with_capacity(prefix);
 
-                while let Ok(item) = T::deserialize_reader(reader) {
+                while items.len() < prefix {
+                    let Ok(item) = T::deserialize_reader(reader) else {
+                        return Err(ErrorKind::InvalidData.into());
+                    };
+
                     items.push(item);
                 }
 
@@ -252,7 +256,7 @@ macro_rules! prefixed_vec_type {
 
             #[inline(always)]
             fn size_of(src: &Self::Src) -> WriteResult<usize> {
-                Ok(core::mem::size_of::<$prefix_type>() + src.0.len())
+                Ok(core::mem::size_of::<$prefix_type>() + size_of::<T>() * src.0.len())
             }
 
             #[inline(always)]
@@ -283,7 +287,6 @@ macro_rules! prefixed_vec_type {
                 mut reader: impl Reader<'de>,
                 dst: &mut MaybeUninit<Self::Dst>,
             ) -> ReadResult<()> {
-                // Read the length prefix first to allocate space for `T`s.
                 let mut prefix = MaybeUninit::<$prefix_type>::uninit();
                 <$prefix_type as SchemaRead<'de, C>>::read(&mut reader, &mut prefix)?;
                 // SAFETY: We have just read the prefix from the reader, so it is initialized.
@@ -291,7 +294,11 @@ macro_rules! prefixed_vec_type {
 
                 let mut items = Vec::with_capacity(prefix);
 
-                while let Ok(item) = T::get(&mut reader) {
+                while items.len() < prefix {
+                    let Ok(item) = T::get(&mut reader) else {
+                        return Err(ReadError::Custom("failed to deserialize"));
+                    };
+
                     items.push(item);
                 }
 
@@ -461,5 +468,32 @@ mod tests {
             result.unwrap_err(),
             WriteError::LengthEncodingOverflow(_)
         ));
+    }
+
+    #[test]
+    fn prefixed_vec_borsh_with_remaining_bytes() {
+        // Bytes representation for a `U8PrefixedVec<u64>` with 8 `u64` values
+        // followed by 16 additional bytes.
+        let mut bytes = [255u8; 81];
+        bytes[0] = 8;
+
+        let mut reader = bytes.as_slice();
+        let serialized = U8PrefixedVec::<u64>::deserialize(&mut reader).unwrap();
+
+        assert_eq!(serialized.len(), 8);
+        assert_eq!(serialized.as_slice(), &[!(0u64); 8]);
+    }
+
+    #[test]
+    fn prefixed_vec_wincode_with_remaining_bytes() {
+        // Bytes representation for a `U8PrefixedVec<u64>` with 8 `u64` values
+        // followed by 16 additional bytes.
+        let mut bytes = [255u8; 81];
+        bytes[0] = 8;
+
+        let serialized = wincode::deserialize::<U8PrefixedVec<u64>>(&bytes).unwrap();
+
+        assert_eq!(serialized.len(), 8);
+        assert_eq!(serialized.as_slice(), &[!(0u64); 8]);
     }
 }

@@ -7,15 +7,10 @@
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-#[cfg(feature = "alloc")]
 extern crate alloc;
 
-#[cfg(feature = "alloc")]
-mod string;
-#[cfg(feature = "alloc")]
+mod str;
 mod vec;
 
-#[cfg(feature = "alloc")]
-pub use string::*;
-#[cfg(feature = "alloc")]
+pub use str::*;
 pub use vec::*;
