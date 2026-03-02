@@ -142,7 +142,16 @@ where
 
     #[inline(always)]
     fn size_of(src: &Self::Src) -> WriteResult<usize> {
-        Ok(src.0.len() * size_of::<T>())
+        let expected_size = src.0.len().saturating_mul(core::mem::size_of::<T>());
+
+        // `Vec` capacity is limited to `isize::MAX`.
+        if expected_size > isize::MAX as usize {
+            return Err(write_length_encoding_overflow(
+                "size of items in TrailingVec",
+            ));
+        }
+
+        Ok(expected_size)
     }
 
     #[inline(always)]
@@ -256,7 +265,17 @@ macro_rules! prefixed_vec_type {
 
             #[inline(always)]
             fn size_of(src: &Self::Src) -> WriteResult<usize> {
-                Ok(core::mem::size_of::<$prefix_type>() + size_of::<T>() * src.0.len())
+                let expected_size = core::mem::size_of::<$prefix_type>().saturating_add(
+                    src.0.len().saturating_mul(size_of::<T>()));
+
+                // `Vec` capacity is limited to `isize::MAX`.
+                if expected_size > isize::MAX as usize {
+                    return Err(write_length_encoding_overflow(
+                        "size of items in TrailingVec",
+                    ));
+                }
+
+                Ok(expected_size)
             }
 
             #[inline(always)]
