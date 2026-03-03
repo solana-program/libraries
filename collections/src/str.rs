@@ -19,7 +19,6 @@ use borsh::{
 };
 use {
     crate::{TrailingVec, U16PrefixedVec, U32PrefixedVec, U64PrefixedVec, U8PrefixedVec},
-    alloc::string::String,
     core::{
         fmt::{Debug, Formatter},
         ops::Deref,
@@ -88,15 +87,9 @@ use {
 #[repr(transparent)]
 pub struct TrailingStr(TrailingVec<u8>);
 
-impl From<String> for TrailingStr {
-    fn from(value: String) -> Self {
-        Self(TrailingVec::from(value.as_bytes()))
-    }
-}
-
-impl From<&str> for TrailingStr {
-    fn from(value: &str) -> Self {
-        Self(TrailingVec::from(value.as_bytes()))
+impl<T: AsRef<str>> From<T> for TrailingStr {
+    fn from(value: T) -> Self {
+        Self(TrailingVec::from(value.as_ref().as_bytes()))
     }
 }
 
@@ -163,15 +156,9 @@ macro_rules! prefixed_str_type {
         #[repr(transparent)]
         pub struct $name($container_type<u8>);
 
-        impl From<String> for $name {
-            fn from(value: String) -> Self {
-                Self($container_type::from(value.as_bytes()))
-            }
-        }
-
-        impl From<&str> for $name {
-            fn from(value: &str) -> Self {
-                Self($container_type::from(value.as_bytes()))
+        impl<T: AsRef<str>> From<T> for $name {
+            fn from(value: T) -> Self {
+                Self($container_type::from(value.as_ref().as_bytes()))
             }
         }
 
@@ -242,7 +229,7 @@ prefixed_str_type!(U64PrefixedStr, U64PrefixedVec, u64);
 #[cfg(test)]
 mod tests {
     use {
-        alloc::vec::Vec,
+        alloc::{string::String, vec::Vec},
         borsh::{io::ErrorKind, BorshDeserialize, BorshSerialize},
         core::mem::size_of,
         wincode::WriteError,
