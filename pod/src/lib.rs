@@ -12,4 +12,4 @@ pub mod primitives;
 
 // Export current sdk types for downstream users building with a different sdk
 // version
-pub use {solana_address, solana_program_error, solana_program_option};
+pub use {solana_program_error, solana_program_option};

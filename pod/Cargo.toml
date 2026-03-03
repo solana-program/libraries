@@ -8,9 +8,9 @@ license = "Apache-2.0"
 edition = "2021"
 
 [features]
-bytemuck = ["dep:bytemuck", "dep:bytemuck_derive", "solana-address/bytemuck"]
-serde = ["dep:serde", "dep:serde_derive", "solana-address/serde"]
-borsh = ["dep:borsh", "solana-address/borsh"]
+bytemuck = ["dep:bytemuck", "dep:bytemuck_derive"]
+serde = ["dep:serde", "dep:serde_derive"]
+borsh = ["dep:borsh"]
 wincode = ["dep:wincode", "dep:wincode-derive"]
 
 [dependencies]
@@ -19,7 +19,6 @@ bytemuck = { version = "1.23.2", optional = true }
 bytemuck_derive = { version = "1.10.1", optional = true }
 serde = { version = "1.0.228", default-features = false, optional = true, features = ["alloc"] }
 serde_derive = { version = "1.0.228", optional = true }
-solana-address = "2.2.0"
 solana-program-error = "3.0.0"
 solana-program-option = "3.0.0"
 wincode = { version = "0.4.4", default-features = false, optional = true }

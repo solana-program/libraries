@@ -17,11 +17,7 @@ use {
     alloc::format,
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
 };
-use {
-    solana_address::{Address, ADDRESS_BYTES},
-    solana_program_error::ProgramError,
-    solana_program_option::COption,
-};
+use {solana_program_error::ProgramError, solana_program_option::COption};
 
 /// Trait for types that can be `None`.
 ///
@@ -172,11 +168,6 @@ impl<T: Nullable> TryFrom<COption<T>> for PodOption<T> {
     }
 }
 
-/// Implementation of `Nullable` for `Address`.
-impl Nullable for Address {
-    const NONE: Self = Address::new_from_array([0u8; ADDRESS_BYTES]);
-}
-
 #[cfg(feature = "serde")]
 impl<T> Serialize for PodOption<T>
 where
@@ -218,68 +209,96 @@ where
 mod tests {
     use super::*;
 
-    const ID: Address = Address::new_from_array([8; ADDRESS_BYTES]);
+    impl Nullable for u64 {
+        const NONE: Self = 0;
+    }
 
     #[test]
     fn test_try_from_option() {
-        let some_address = Some(ID);
-        assert_eq!(PodOption::try_from(some_address).unwrap(), PodOption(ID));
+        let some = Some(8u64);
+        assert_eq!(PodOption::try_from(some).unwrap(), PodOption::from(8u64));
 
-        let none_address = None;
+        let none = None;
         assert_eq!(
-            PodOption::try_from(none_address).unwrap(),
-            PodOption::from(Address::NONE)
+            PodOption::try_from(none).unwrap(),
+            PodOption::from(u64::NONE)
         );
 
-        let invalid_option = Some(Address::NONE);
+        let invalid_option = Some(u64::NONE);
         let err = PodOption::try_from(invalid_option).unwrap_err();
         assert_eq!(err, ProgramError::InvalidArgument);
     }
 
     #[test]
-    fn test_try_from_coption_reject_some_zero_address() {
-        let invalid_option = COption::Some(Address::NONE);
+    fn test_try_from_coption_accepts_some_and_none() {
+        assert_eq!(
+            PodOption::try_from(COption::Some(8u64)).unwrap(),
+            PodOption::from(8u64)
+        );
+        assert_eq!(
+            PodOption::<u64>::try_from(COption::None).unwrap(),
+            PodOption::from(u64::NONE)
+        );
+    }
+
+    #[test]
+    fn test_try_from_coption_rejects_some_none_marker() {
+        let invalid_option = COption::Some(u64::NONE);
         let err = PodOption::try_from(invalid_option).unwrap_err();
         assert_eq!(err, ProgramError::InvalidArgument);
     }
 
     #[test]
     fn test_from_pod_option() {
-        let some = PodOption::from(ID);
-        let none = PodOption::from(Address::NONE);
+        let some = PodOption::from(8u64);
+        let none = PodOption::from(u64::NONE);
 
-        assert_eq!(Option::<Address>::from(some), Some(ID));
-        assert_eq!(Option::<Address>::from(none), None);
-        assert_eq!(COption::<Address>::from(some), COption::Some(ID));
-        assert_eq!(COption::<Address>::from(none), COption::None);
+        assert_eq!(Option::<u64>::from(some), Some(8u64));
+        assert_eq!(Option::<u64>::from(none), None);
+        assert_eq!(COption::<u64>::from(some), COption::Some(8u64));
+        assert_eq!(COption::<u64>::from(none), COption::None);
     }
 
     #[test]
     fn test_default() {
-        let def = PodOption::<Address>::default();
+        let def = PodOption::<u64>::default();
         assert_eq!(def, None.try_into().unwrap());
     }
 
     #[test]
     fn test_copied() {
-        let some_address = PodOption::from(ID);
-        assert_eq!(some_address.copied(), Some(ID));
+        let some = PodOption::from(8u64);
+        assert_eq!(some.copied(), Some(8u64));
 
-        let none_address = PodOption::from(Address::NONE);
-        assert_eq!(none_address.copied(), None);
+        let none = PodOption::from(u64::NONE);
+        assert_eq!(none.copied(), None);
+    }
+
+    #[test]
+    fn test_nullable_predicates() {
+        assert!(u64::NONE.is_none());
+        assert!(!u64::NONE.is_some());
+        assert!(8u64.is_some());
+        assert!(!8u64.is_none());
+    }
+
+    #[test]
+    fn test_as_ref() {
+        let some = PodOption::from(8u64);
+        assert_eq!(some.as_ref(), Some(&8u64));
+
+        let none = PodOption::from(u64::NONE);
+        assert_eq!(none.as_ref(), None);
     }
 
     #[test]
     fn test_as_mut() {
-        let mut some = PodOption::from(Address::new_from_array([3; ADDRESS_BYTES]));
+        let mut some = PodOption::from(3u64);
         assert!(some.as_mut().is_some());
-        *some.as_mut().unwrap() = Address::new_from_array([4; ADDRESS_BYTES]);
-        assert_eq!(
-            some.get(),
-            Some(Address::new_from_array([4; ADDRESS_BYTES]))
-        );
+        *some.as_mut().unwrap() = 4u64;
+        assert_eq!(some.get(), Some(4u64));
 
-        let mut none = PodOption::from(Address::NONE);
+        let mut none = PodOption::from(u64::NONE);
         assert!(none.as_mut().is_none());
     }
 
@@ -288,10 +307,6 @@ mod tests {
 
     impl Nullable for TestNonCopyNullable {
         const NONE: Self = Self([0u8; 4]);
-    }
-
-    impl Nullable for u64 {
-        const NONE: Self = 0;
     }
 
     #[test]
@@ -305,27 +320,29 @@ mod tests {
 
     #[cfg(feature = "borsh")]
     mod borsh_tests {
-        use {super::*, alloc::vec};
+        use super::*;
 
         #[test]
         fn test_borsh_roundtrip_and_encoding() {
-            let some = PodOption::from(Address::new_from_array([1; ADDRESS_BYTES]));
-            let none = PodOption::from(Address::NONE);
+            let some = PodOption::from(9u64);
+            let none = PodOption::from(0u64);
 
             let some_bytes = borsh::to_vec(&some).unwrap();
             let none_bytes = borsh::to_vec(&none).unwrap();
 
-            assert_eq!(some_bytes, vec![1; ADDRESS_BYTES]);
-            assert_eq!(none_bytes, vec![0; ADDRESS_BYTES]);
+            assert_eq!(some_bytes.len(), core::mem::size_of::<u64>());
+            assert_eq!(none_bytes.len(), core::mem::size_of::<u64>());
+            assert_eq!(some_bytes.as_slice(), &9u64.to_le_bytes());
+            assert_eq!(none_bytes.as_slice(), &0u64.to_le_bytes());
             assert_eq!(
-                borsh::from_slice::<PodOption<Address>>(&some_bytes).unwrap(),
+                borsh::from_slice::<PodOption<u64>>(&some_bytes).unwrap(),
                 some
             );
             assert_eq!(
-                borsh::from_slice::<PodOption<Address>>(&none_bytes).unwrap(),
+                borsh::from_slice::<PodOption<u64>>(&none_bytes).unwrap(),
                 none
             );
-            assert!(borsh::from_slice::<PodOption<Address>>(&[]).is_err());
+            assert!(borsh::from_slice::<PodOption<u64>>(&[]).is_err());
         }
     }
 
@@ -364,38 +381,6 @@ mod tests {
         use {super::*, alloc::string::ToString};
 
         #[test]
-        fn test_serde_some() {
-            let some = PodOption::from(Address::new_from_array([1; ADDRESS_BYTES]));
-            let serialized = serde_json::to_string(&some).unwrap();
-            assert_eq!(
-                &serialized,
-                "[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]"
-            );
-            let deserialized = serde_json::from_str::<PodOption<Address>>(&serialized).unwrap();
-            assert_eq!(some, deserialized);
-        }
-
-        #[test]
-        fn test_serde_none() {
-            let none = PodOption::from(Address::new_from_array([0; ADDRESS_BYTES]));
-            let serialized = serde_json::to_string(&none).unwrap();
-            assert_eq!(&serialized, "null");
-            let deserialized = serde_json::from_str::<PodOption<Address>>(&serialized).unwrap();
-            assert_eq!(none, deserialized);
-        }
-
-        #[test]
-        fn test_serde_reject_zero_address_bytes() {
-            let zero_bytes = "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]";
-            assert!(serde_json::from_str::<PodOption<Address>>(zero_bytes).is_err());
-        }
-
-        #[test]
-        fn test_serde_reject_invalid_address_string() {
-            assert!(serde_json::from_str::<PodOption<Address>>("\"not_an_address\"").is_err());
-        }
-
-        #[test]
         fn test_serde_u64_some() {
             let some = PodOption::from(7u64);
             let serialized = serde_json::to_string(&some).unwrap();
@@ -429,51 +414,48 @@ mod tests {
     mod bytemuck_tests {
         use {
             super::*,
-            crate::bytemuck::{pod_from_bytes, pod_slice_from_bytes},
+            crate::bytemuck::{pod_bytes_of, pod_from_bytes, pod_slice_from_bytes},
             alloc::vec::Vec,
         };
 
         #[test]
-        fn test_pod_option_address() {
-            let some_address = PodOption::from(ID);
-            assert_eq!(some_address.get(), Some(ID));
+        fn test_pod_option_u64() {
+            let mut data = Vec::with_capacity(2 * core::mem::size_of::<u64>());
+            data.extend_from_slice(&8u64.to_le_bytes());
+            data.extend_from_slice(&0u64.to_le_bytes());
 
-            let none_address = PodOption::from(Address::default());
-            assert_eq!(none_address.get(), None);
-
-            let mut data = Vec::with_capacity(64);
-            data.extend_from_slice(ID.as_ref());
-            data.extend_from_slice(&[0u8; 32]);
-
-            let values = pod_slice_from_bytes::<PodOption<Address>>(&data).unwrap();
-            assert_eq!(values[0], PodOption::from(ID));
-            assert_eq!(values[1], PodOption::from(Address::default()));
+            let values = pod_slice_from_bytes::<PodOption<u64>>(&data).unwrap();
+            assert_eq!(values[0], PodOption::from(8u64));
+            assert_eq!(values[1], PodOption::from(0u64));
         }
 
         #[test]
         fn test_pod_from_bytes() {
+            let some = PodOption::from(1u64);
             assert_eq!(
-                Option::<Address>::from(
-                    *pod_from_bytes::<PodOption<Address>>(&[1; ADDRESS_BYTES]).unwrap()
+                Option::<u64>::from(
+                    *pod_from_bytes::<PodOption<u64>>(pod_bytes_of(&some)).unwrap()
                 ),
-                Some(Address::new_from_array([1; ADDRESS_BYTES])),
+                Some(1u64),
             );
+
+            let none = PodOption::from(0u64);
             assert_eq!(
-                Option::<Address>::from(
-                    *pod_from_bytes::<PodOption<Address>>(&[0; ADDRESS_BYTES]).unwrap()
+                Option::<u64>::from(
+                    *pod_from_bytes::<PodOption<u64>>(pod_bytes_of(&none)).unwrap()
                 ),
                 None,
             );
             assert_eq!(
-                pod_from_bytes::<PodOption<Address>>(&[]).unwrap_err(),
+                pod_from_bytes::<PodOption<u64>>(&[]).unwrap_err(),
                 ProgramError::InvalidArgument
             );
             assert_eq!(
-                pod_from_bytes::<PodOption<Address>>(&[0; 1]).unwrap_err(),
+                pod_from_bytes::<PodOption<u64>>(&[0; 7]).unwrap_err(),
                 ProgramError::InvalidArgument
             );
             assert_eq!(
-                pod_from_bytes::<PodOption<Address>>(&[1; 1]).unwrap_err(),
+                pod_from_bytes::<PodOption<u64>>(&[1; 7]).unwrap_err(),
                 ProgramError::InvalidArgument
             );
         }

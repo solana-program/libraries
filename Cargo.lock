@@ -1084,20 +1084,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-address"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68c5d02824391b072dc5cd0aaa85fb0af9784a21d23286a767994d1e8a322131"
-dependencies = [
- "borsh",
- "bytemuck",
- "bytemuck_derive",
- "serde",
- "serde_derive",
- "wincode",
-]
-
-[[package]]
 name = "solana-atomic-u64"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1320,7 +1306,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8909d399deb0851aa524420beeb5646b115fd253ef446e35fe4504c904da3941"
 dependencies = [
  "rand 0.8.5",
- "solana-address 1.0.0",
+ "solana-address",
 ]
 
 [[package]]
@@ -1645,7 +1631,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "solana-address 2.2.0",
  "solana-program-error",
  "solana-program-option",
  "spl-pod 0.7.2",
@@ -2169,7 +2154,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "thiserror 2.0.18",
- "wincode-derive",
 ]
 
 [[package]]
