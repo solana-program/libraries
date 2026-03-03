@@ -9,6 +9,7 @@ on:
         default: 'discriminator'
         type: choice
         options:
+          - collections
           - discriminator
           - discriminator-derive
           - discriminator-syn
