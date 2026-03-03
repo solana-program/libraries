@@ -331,25 +331,15 @@ mod tests {
 
     #[cfg(feature = "wincode")]
     mod wincode_tests {
-        use {super::*, alloc::vec, alloc::vec::Vec};
-
-        fn serialize<T>(value: &T) -> Vec<u8>
-        where
-            T: wincode::SchemaWrite<wincode::config::DefaultConfig, Src = T>,
-        {
-            let size = wincode::serialized_size(value).unwrap() as usize;
-            let mut bytes = vec![0u8; size];
-            wincode::serialize_into(&mut bytes[..], value).unwrap();
-            bytes
-        }
+        use super::*;
 
         #[test]
         fn test_wincode_pod_option_roundtrip_and_size() {
             let some = PodOption::from(9u64);
             let none = PodOption::from(0u64);
 
-            let some_bytes = serialize(&some);
-            let none_bytes = serialize(&none);
+            let some_bytes = wincode::serialize(&some).unwrap();
+            let none_bytes = wincode::serialize(&none).unwrap();
 
             assert_eq!(some_bytes.len(), core::mem::size_of::<u64>());
             assert_eq!(none_bytes.len(), core::mem::size_of::<u64>());
