@@ -22,12 +22,12 @@ use {
     core::{
         fmt::{Debug, Formatter},
         ops::Deref,
-        str::from_utf8_unchecked,
+        str::{from_utf8, from_utf8_unchecked},
     },
 };
 #[cfg(feature = "wincode")]
 use {
-    core::{mem::MaybeUninit, str::from_utf8},
+    core::mem::MaybeUninit,
     wincode::{
         config::{Config, ConfigCore},
         io::Reader,
