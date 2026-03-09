@@ -1,6 +1,6 @@
 [package]
 name = "spl-collections"
-version = "0.1.0"
+version = "0.1.1"
 description = "Serialization-aware collection wrappers for Solana account data"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
