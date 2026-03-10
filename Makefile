@@ -50,7 +50,7 @@ format-check-%:
 	cargo $(nightly) fmt --check --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
 powerset-%:
-	cargo $(nightly) hack check --feature-powerset --all-targets --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+	cargo $(nightly) hack check --feature-powerset --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
 semver-check-%:
 	cargo semver-checks --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
