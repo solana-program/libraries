@@ -2,6 +2,7 @@
 //! meant to be unique for instructions or struct types
 
 #![deny(missing_docs)]
+#![no_std]
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
 extern crate self as spl_discriminator;
@@ -22,8 +23,8 @@ mod tests {
     #[allow(dead_code)]
     #[derive(SplDiscriminate)]
     #[discriminator_hash_input("my_first_instruction")]
-    pub struct MyInstruction1 {
-        arg1: String,
+    pub struct MyInstruction1<'a> {
+        arg1: &'a str,
         arg2: u8,
     }
 
@@ -112,7 +113,7 @@ mod tests {
             build_discriminator("my_runtime_hash_input"),
         );
 
-        assert_discriminator::<MyInstruction1>("my_first_instruction");
+        assert_discriminator::<MyInstruction1<'_>>("my_first_instruction");
         assert_discriminator::<MyInstruction2>("global:my_second_instruction");
         assert_discriminator::<MyInstruction3<'_>>("global:my_instruction_with_lifetime");
         assert_discriminator::<MyInstruction4<u8>>("global:my_instruction_with_one_generic");
