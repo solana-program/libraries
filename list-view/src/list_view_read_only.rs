@@ -4,11 +4,11 @@ use {
     crate::{list_trait::List, pod_length::PodLength},
     bytemuck::Pod,
     core::ops::Deref,
-    spl_pod::primitives::PodU32,
+    solana_zero_copy::unaligned::U32,
 };
 
 #[derive(Debug)]
-pub struct ListViewReadOnly<'data, T: Pod, L: PodLength = PodU32> {
+pub struct ListViewReadOnly<'data, T: Pod, L: PodLength = U32> {
     pub(crate) length: &'data L,
     pub(crate) data: &'data [T],
     pub(crate) capacity: usize,
@@ -39,7 +39,7 @@ mod tests {
         crate::ListView,
         bytemuck_derive::{Pod as DerivePod, Zeroable},
         core::mem::size_of,
-        spl_pod::primitives::{PodU32, PodU64},
+        solana_zero_copy::unaligned::{U32 as PodU32, U64 as PodU64},
     };
 
     #[repr(C, align(16))]

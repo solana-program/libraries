@@ -5,11 +5,11 @@ use {
     bytemuck::Pod,
     core::ops::{Deref, DerefMut},
     solana_program_error::ProgramError,
-    spl_pod::primitives::PodU32,
+    solana_zero_copy::unaligned::U32,
 };
 
 #[derive(Debug)]
-pub struct ListViewMut<'data, T: Pod, L: PodLength = PodU32> {
+pub struct ListViewMut<'data, T: Pod, L: PodLength = U32> {
     pub(crate) length: &'data mut L,
     pub(crate) data: &'data mut [T],
     pub(crate) capacity: usize,
@@ -83,7 +83,7 @@ mod tests {
         super::*,
         crate::{List, ListView},
         bytemuck_derive::{Pod, Zeroable},
-        spl_pod::primitives::{PodU16, PodU32, PodU64},
+        solana_zero_copy::unaligned::{U16 as PodU16, U32 as PodU32, U64 as PodU64},
     };
 
     #[repr(C)]

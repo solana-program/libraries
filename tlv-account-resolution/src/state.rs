@@ -191,7 +191,7 @@ impl ExtraAccountMetaList {
         tlv_state: &'a TlvStateBorrowed,
     ) -> Result<ListViewReadOnly<'a, ExtraAccountMeta, PodU32>, ProgramError> {
         let bytes = tlv_state.get_first_bytes::<T>()?;
-        ListView::<ExtraAccountMeta>::unpack(bytes)
+        ListView::<ExtraAccountMeta, PodU32>::unpack(bytes)
     }
 
     /// Get the byte size required to hold `num_items` items
