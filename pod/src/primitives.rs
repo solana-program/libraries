@@ -1,23 +1,18 @@
 //! primitive types that can be used in `Pod`s
-#[cfg(feature = "bytemuck")]
-use bytemuck_derive::{Pod, Zeroable};
-#[cfg(feature = "serde")]
-use serde_derive::{Deserialize, Serialize};
-#[cfg(feature = "wincode")]
-use wincode_derive::{SchemaRead, SchemaWrite};
 #[cfg(feature = "borsh")]
-use {
-    alloc::string::ToString,
-    borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
-};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
+use bytemuck_derive::{Pod, Zeroable};
+#[cfg(feature = "serde-traits")]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "wincode")]
+use wincode::{SchemaRead, SchemaWrite};
 
 /// The standard `bool` is not a `Pod`, define a replacement that is
 #[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
 #[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "bool", into = "bool"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "bool", into = "bool"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodBool(pub u8);
 impl PodBool {
@@ -79,10 +74,9 @@ macro_rules! impl_int_conversion {
 /// `u16` type that can be used in `Pod`s
 #[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
 #[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "u16", into = "u16"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "u16", into = "u16"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodU16(pub [u8; 2]);
 impl_int_conversion!(PodU16, u16);
@@ -90,10 +84,9 @@ impl_int_conversion!(PodU16, u16);
 /// `i16` type that can be used in Pods
 #[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
 #[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "i16", into = "i16"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "i16", into = "i16"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodI16(pub [u8; 2]);
 impl_int_conversion!(PodI16, i16);
@@ -105,10 +98,9 @@ impl_int_conversion!(PodI16, i16);
     feature = "borsh",
     derive(BorshDeserialize, BorshSerialize, BorshSchema)
 )]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "u32", into = "u32"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "u32", into = "u32"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodU32(pub [u8; 4]);
 impl_int_conversion!(PodU32, u32);
@@ -120,10 +112,9 @@ impl_int_conversion!(PodU32, u32);
     feature = "borsh",
     derive(BorshDeserialize, BorshSerialize, BorshSchema)
 )]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "u64", into = "u64"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "u64", into = "u64"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodU64(pub [u8; 8]);
 impl_int_conversion!(PodU64, u64);
@@ -131,10 +122,9 @@ impl_int_conversion!(PodU64, u64);
 /// `i64` type that can be used in Pods
 #[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
 #[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "i64", into = "i64"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "i64", into = "i64"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodI64([u8; 8]);
 impl_int_conversion!(PodI64, i64);
@@ -146,48 +136,17 @@ impl_int_conversion!(PodI64, i64);
     feature = "borsh",
     derive(BorshDeserialize, BorshSerialize, BorshSchema)
 )]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(from = "u128", into = "u128"))]
-#[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-traits", serde(from = "u128", into = "u128"))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodU128(pub [u8; 16]);
 impl_int_conversion!(PodU128, u128);
 
-/// Implements the `TryFrom<usize>` and `From<T> for usize` conversions for a Pod integer type
-macro_rules! impl_usize_conversion {
-    ($PodType:ty, $PrimitiveType:ty) => {
-        impl TryFrom<usize> for $PodType {
-            type Error = core::num::TryFromIntError;
-
-            fn try_from(val: usize) -> Result<Self, Self::Error> {
-                let primitive_val = <$PrimitiveType>::try_from(val)?;
-                Ok(primitive_val.into())
-            }
-        }
-
-        impl From<$PodType> for usize {
-            fn from(pod_val: $PodType) -> Self {
-                let primitive_val = <$PrimitiveType>::from(pod_val);
-                Self::try_from(primitive_val)
-                    .expect("value out of range for usize on this platform")
-            }
-        }
-    };
-}
-
-impl_usize_conversion!(PodU16, u16);
-impl_usize_conversion!(PodU32, u32);
-impl_usize_conversion!(PodU64, u64);
-impl_usize_conversion!(PodU128, u128);
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-    #[cfg(feature = "bytemuck")]
-    use crate::bytemuck::pod_from_bytes;
+    use {super::*, crate::bytemuck::pod_from_bytes};
 
-    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_bool() {
         assert!(pod_from_bytes::<PodBool>(&[]).is_err());
@@ -198,7 +157,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "serde-traits")]
     #[test]
     fn test_pod_bool_serde() {
         let pod_false: PodBool = false.into();
@@ -215,14 +174,13 @@ mod tests {
         assert_eq!(pod_true, deserialized_true);
     }
 
-    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_u16() {
         assert!(pod_from_bytes::<PodU16>(&[]).is_err());
         assert_eq!(1u16, u16::from(*pod_from_bytes::<PodU16>(&[1, 0]).unwrap()));
     }
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "serde-traits")]
     #[test]
     fn test_pod_u16_serde() {
         let pod_u16: PodU16 = u16::MAX.into();
@@ -234,7 +192,6 @@ mod tests {
         assert_eq!(pod_u16, deserialized);
     }
 
-    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_i16() {
         assert!(pod_from_bytes::<PodI16>(&[]).is_err());
@@ -244,10 +201,13 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "serde-traits")]
     #[test]
     fn test_pod_i16_serde() {
         let pod_i16: PodI16 = i16::MAX.into();
+
+        println!("pod_i16 {:?}", pod_i16);
+
         let serialized = serde_json::to_string(&pod_i16).unwrap();
         assert_eq!(&serialized, "32767");
 
@@ -255,7 +215,6 @@ mod tests {
         assert_eq!(pod_i16, deserialized);
     }
 
-    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_u64() {
         assert!(pod_from_bytes::<PodU64>(&[]).is_err());
@@ -265,7 +224,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "serde-traits")]
     #[test]
     fn test_pod_u64_serde() {
         let pod_u64: PodU64 = u64::MAX.into();
@@ -277,7 +236,6 @@ mod tests {
         assert_eq!(pod_u64, deserialized);
     }
 
-    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_i64() {
         assert!(pod_from_bytes::<PodI64>(&[]).is_err());
@@ -289,7 +247,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "serde-traits")]
     #[test]
     fn test_pod_i64_serde() {
         let pod_i64: PodI64 = i64::MAX.into();
@@ -301,7 +259,6 @@ mod tests {
         assert_eq!(pod_i64, deserialized);
     }
 
-    #[cfg(feature = "bytemuck")]
     #[test]
     fn test_pod_u128() {
         assert!(pod_from_bytes::<PodU128>(&[]).is_err());
@@ -314,7 +271,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "serde")]
+    #[cfg(feature = "serde-traits")]
     #[test]
     fn test_pod_u128_serde() {
         let pod_u128: PodU128 = u128::MAX.into();
@@ -325,31 +282,6 @@ mod tests {
         let deserialized = serde_json::from_str::<PodU128>(&serialized).unwrap();
         assert_eq!(pod_u128, deserialized);
     }
-
-    macro_rules! test_usize_roundtrip {
-        ($test_name:ident, $PodType:ty, $max:expr) => {
-            #[test]
-            fn $test_name() {
-                // zero
-                let pod = <$PodType>::try_from(0usize).unwrap();
-                assert_eq!(usize::from(pod), 0);
-
-                // mid-range
-                let pod = <$PodType>::try_from(42usize).unwrap();
-                assert_eq!(usize::from(pod), 42);
-
-                // max
-                let max = $max as usize;
-                let pod = <$PodType>::try_from(max).unwrap();
-                assert_eq!(usize::from(pod), max);
-            }
-        };
-    }
-
-    test_usize_roundtrip!(test_usize_roundtrip_u16, PodU16, u16::MAX);
-    test_usize_roundtrip!(test_usize_roundtrip_u32, PodU32, u32::MAX);
-    test_usize_roundtrip!(test_usize_roundtrip_u64, PodU64, u64::MAX);
-    test_usize_roundtrip!(test_usize_roundtrip_u128, PodU128, u128::MAX);
 
     #[cfg(feature = "wincode")]
     mod wincode_tests {
@@ -365,18 +297,14 @@ mod tests {
         #[test_case(PodU128::from_primitive(u128::MAX))]
         fn wincode_roundtrip<
             T: PartialEq
-                + core::fmt::Debug
+                + std::fmt::Debug
                 + for<'de> wincode::SchemaRead<'de, wincode::config::DefaultConfig, Dst = T>
                 + wincode::SchemaWrite<wincode::config::DefaultConfig, Src = T>,
         >(
             pod: T,
         ) {
-            let size = wincode::serialized_size(&pod).unwrap() as usize;
-            let mut bytes = [0u8; 32];
-            assert!(size <= bytes.len());
-            wincode::serialize_into(&mut bytes[..size], &pod).unwrap();
-
-            let deserialized: T = wincode::deserialize(&bytes[..size]).unwrap();
+            let bytes = wincode::serialize(&pod).unwrap();
+            let deserialized: T = wincode::deserialize(&bytes).unwrap();
             assert_eq!(pod, deserialized);
         }
     }
