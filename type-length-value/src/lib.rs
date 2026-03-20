@@ -3,7 +3,10 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 #![deny(missing_docs)]
+#![no_std]
 #![cfg_attr(not(test), forbid(unsafe_code))]
+
+extern crate alloc;
 
 pub mod error;
 pub mod length;
