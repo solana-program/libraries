@@ -5,19 +5,14 @@ use {
         error::ListViewError, list_view_mut::ListViewMut, list_view_read_only::ListViewReadOnly,
         pod_length::PodLength,
     },
-    bytemuck::Pod,
+    bytemuck::{try_cast_slice, try_cast_slice_mut, try_from_bytes, try_from_bytes_mut, Pod},
     core::{
         marker::PhantomData,
         mem::{align_of, size_of},
         ops::Range,
     },
     solana_program_error::ProgramError,
-    spl_pod::{
-        bytemuck::{
-            pod_from_bytes, pod_from_bytes_mut, pod_slice_from_bytes, pod_slice_from_bytes_mut,
-        },
-        primitives::PodU32,
-    },
+    solana_zero_copy::unaligned::U32,
 };
 
 /// An API for interpreting a raw buffer (`&[u8]`) as a variable-length collection of Pod elements.
@@ -36,13 +31,13 @@ use {
 /// The structure assumes the underlying byte buffer is formatted as follows:
 /// 1.  **Length**: A length field of type `L` at the beginning of the buffer,
 ///     indicating the number of currently active elements in the collection.
-///     Defaults to `PodU32`. The implementation uses padding to ensure that the
+///     Defaults to `U32`. The implementation uses padding to ensure that the
 ///     data is correctly aligned for any `Pod` type.
 /// 2.  **Padding**: Optional padding bytes to ensure proper alignment of the data.
 /// 3.  **Data**: The remaining part of the buffer, which is treated as a slice
 ///     of `T` elements. The capacity of the collection is the number of `T`
 ///     elements that can fit into this data portion.
-pub struct ListView<T: Pod, L: PodLength = PodU32>(PhantomData<(T, L)>);
+pub struct ListView<T: Pod, L: PodLength = U32>(PhantomData<(T, L)>);
 
 struct Layout {
     length_range: Range<usize>,
@@ -75,8 +70,9 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
         let len_bytes = &buf[layout.length_range];
         let data_bytes = &buf[layout.data_range];
 
-        let length = pod_from_bytes::<L>(len_bytes)?;
-        let data = pod_slice_from_bytes::<T>(data_bytes)?;
+        let length = try_from_bytes::<L>(len_bytes).map_err(|_| ProgramError::InvalidArgument)?;
+        let data =
+            try_cast_slice::<u8, T>(data_bytes).map_err(|_| ProgramError::InvalidArgument)?;
         let capacity = data.len();
 
         if (*length).into() > capacity {
@@ -121,8 +117,10 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
         let len_bytes = &mut header_bytes[layout.length_range];
 
         // Cast the bytes to typed data
-        let length = pod_from_bytes_mut::<L>(len_bytes)?;
-        let data = pod_slice_from_bytes_mut::<T>(data_bytes)?;
+        let length =
+            try_from_bytes_mut::<L>(len_bytes).map_err(|_| ProgramError::InvalidArgument)?;
+        let data =
+            try_cast_slice_mut::<u8, T>(data_bytes).map_err(|_| ProgramError::InvalidArgument)?;
         let capacity = data.len();
 
         Ok(ListViewMut {
@@ -188,7 +186,9 @@ mod tests {
         super::*,
         crate::List,
         bytemuck_derive::{Pod as DerivePod, Zeroable},
-        spl_pod::primitives::{PodU128, PodU16, PodU32, PodU64},
+        solana_zero_copy::unaligned::{
+            U128 as PodU128, U16 as PodU16, U32 as PodU32, U64 as PodU64,
+        },
     };
 
     #[test]

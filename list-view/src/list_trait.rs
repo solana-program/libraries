@@ -10,7 +10,7 @@ use {
 pub trait List: Deref<Target = [Self::Item]> {
     /// The type of the items stored in the list.
     type Item: Pod;
-    /// Length prefix type used (`PodU16`, `PodU32`, …).
+    /// Length prefix type used (`U16`, `U32`, ...).
     type Length: PodLength;
 
     /// Returns the total number of items that can be stored in the list.

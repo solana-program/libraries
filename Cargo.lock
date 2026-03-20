@@ -1528,6 +1528,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-zero-copy"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94f52dd8f733a13f6a18e55de83cf97c4c3f5fdf27ea3830bcff0b35313efcc2"
+dependencies = [
+ "bytemuck",
+ "bytemuck_derive",
+]
+
+[[package]]
 name = "solana-zk-sdk"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1672,7 +1682,7 @@ dependencies = [
  "num-traits",
  "num_enum",
  "solana-program-error",
- "spl-pod 0.7.2",
+ "solana-zero-copy",
  "thiserror 2.0.18",
 ]
 
