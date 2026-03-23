@@ -1592,18 +1592,6 @@ dependencies = [
 [[package]]
 name = "spl-discriminator"
 version = "0.5.1"
-dependencies = [
- "borsh",
- "bytemuck",
- "solana-program-error",
- "solana-sha256-hasher",
- "spl-discriminator 0.5.1",
- "spl-discriminator-derive 0.2.0",
-]
-
-[[package]]
-name = "spl-discriminator"
-version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d48cc11459e265d5b501534144266620289720b4c44522a47bc6b63cd295d2f3"
 dependencies = [
@@ -1611,6 +1599,18 @@ dependencies = [
  "solana-program-error",
  "solana-sha256-hasher",
  "spl-discriminator-derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "spl-discriminator"
+version = "0.5.2"
+dependencies = [
+ "borsh",
+ "bytemuck",
+ "solana-program-error",
+ "solana-sha256-hasher",
+ "spl-discriminator 0.5.2",
+ "spl-discriminator-derive 0.2.0",
 ]
 
 [[package]]
@@ -1772,7 +1772,7 @@ dependencies = [
  "solana-instruction",
  "solana-program-error",
  "solana-pubkey",
- "spl-discriminator 0.5.1",
+ "spl-discriminator 0.5.2",
  "spl-list-view",
  "spl-pod 0.7.2",
  "spl-program-error",
@@ -1853,7 +1853,7 @@ dependencies = [
  "solana-instruction",
  "solana-program-error",
  "solana-pubkey",
- "spl-discriminator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-discriminator 0.5.1",
  "spl-pod 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 2.0.18",
 ]
@@ -1891,7 +1891,7 @@ dependencies = [
  "solana-instruction",
  "solana-program-error",
  "solana-pubkey",
- "spl-discriminator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-discriminator 0.5.1",
  "spl-pod 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-type-length-value 0.9.0",
  "thiserror 2.0.18",
@@ -1910,7 +1910,7 @@ dependencies = [
  "solana-account-info",
  "solana-msg",
  "solana-program-error",
- "spl-discriminator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-discriminator 0.5.1",
  "spl-pod 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 2.0.18",
 ]
@@ -1926,7 +1926,7 @@ dependencies = [
  "solana-account-info",
  "solana-program-error",
  "solana-zero-copy",
- "spl-discriminator 0.5.1",
+ "spl-discriminator 0.5.2",
  "spl-type-length-value-derive",
  "thiserror 2.0.18",
 ]
@@ -1946,7 +1946,7 @@ version = "0.1.0"
 dependencies = [
  "borsh",
  "solana-borsh",
- "spl-discriminator 0.5.1",
+ "spl-discriminator 0.5.2",
  "spl-type-length-value 0.9.1",
 ]
 
