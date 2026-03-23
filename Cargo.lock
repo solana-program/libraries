@@ -1776,7 +1776,7 @@ dependencies = [
  "spl-list-view",
  "spl-pod 0.7.2",
  "spl-program-error",
- "spl-type-length-value 0.9.0",
+ "spl-type-length-value 0.9.1",
  "thiserror 2.0.18",
  "tokio",
 ]
@@ -1805,7 +1805,7 @@ dependencies = [
  "spl-token-confidential-transfer-proof-generation",
  "spl-token-group-interface",
  "spl-token-metadata-interface",
- "spl-type-length-value 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spl-type-length-value 0.9.0",
  "thiserror 2.0.18",
 ]
 
@@ -1893,23 +1893,7 @@ dependencies = [
  "solana-pubkey",
  "spl-discriminator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-pod 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "spl-type-length-value 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "spl-type-length-value"
-version = "0.9.0"
-dependencies = [
- "bytemuck",
- "num-derive",
- "num-traits",
- "num_enum",
- "solana-account-info",
- "solana-program-error",
- "solana-zero-copy",
- "spl-discriminator 0.5.1",
- "spl-type-length-value-derive",
+ "spl-type-length-value 0.9.0",
  "thiserror 2.0.18",
 ]
 
@@ -1932,6 +1916,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "spl-type-length-value"
+version = "0.9.1"
+dependencies = [
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "num_enum",
+ "solana-account-info",
+ "solana-program-error",
+ "solana-zero-copy",
+ "spl-discriminator 0.5.1",
+ "spl-type-length-value-derive",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "spl-type-length-value-derive"
 version = "0.2.1"
 dependencies = [
@@ -1947,7 +1947,7 @@ dependencies = [
  "borsh",
  "solana-borsh",
  "spl-discriminator 0.5.1",
- "spl-type-length-value 0.9.0",
+ "spl-type-length-value 0.9.1",
 ]
 
 [[package]]
