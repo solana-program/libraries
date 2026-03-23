@@ -14,15 +14,14 @@ derive = ["dep:spl-type-length-value-derive", "solana-program-error/borsh"]
 [dependencies]
 bytemuck = { version = "1.23.2", features = ["derive"] }
 num-derive = "0.4"
-num_enum = "0.7"
-num-traits = "0.2"
-solana-account-info = "3.0.0"
-solana-msg = "3.0.0"
+num_enum = { version = "0.7", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+solana-account-info = "3.1.1"
 solana-program-error = "3.0.0"
+solana-zero-copy = { version = "1.0.0", features = ["bytemuck"] }
 spl-discriminator = { version = "0.5.1", path = "../discriminator" }
 spl-type-length-value-derive = { version = "0.2", path = "../type-length-value-derive", optional = true }
-spl-pod = { version = "0.7.1", path = "../pod", features = ["bytemuck"] }
-thiserror = "2.0"
+thiserror = { version = "2.0", default-features = false }
 
 [lib]
 crate-type = ["lib"]

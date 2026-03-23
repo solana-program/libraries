@@ -2,13 +2,21 @@
 
 use {
     crate::{error::TlvError, length::Length, variable_len_pack::VariableLenPack},
-    bytemuck::Pod,
+    alloc::{vec, vec::Vec},
+    bytemuck::{try_from_bytes, try_from_bytes_mut, Pod},
+    core::{cmp::Ordering, mem::size_of},
     solana_account_info::AccountInfo,
     solana_program_error::ProgramError,
     spl_discriminator::{ArrayDiscriminator, SplDiscriminate},
-    spl_pod::bytemuck::{pod_from_bytes, pod_from_bytes_mut},
-    std::{cmp::Ordering, mem::size_of},
 };
+
+fn pod_from_bytes<T: Pod>(bytes: &[u8]) -> Result<&T, ProgramError> {
+    try_from_bytes(bytes).map_err(|_| ProgramError::InvalidArgument)
+}
+
+fn pod_from_bytes_mut<T: Pod>(bytes: &mut [u8]) -> Result<&mut T, ProgramError> {
+    try_from_bytes_mut(bytes).map_err(|_| ProgramError::InvalidArgument)
+}
 
 /// Get the current `TlvIndices` from the current spot
 const fn get_indices_unchecked(type_start: usize, value_repetition_number: usize) -> TlvIndices {
@@ -611,6 +619,7 @@ fn check_data(tlv_data: &[u8]) -> Result<(), ProgramError> {
 mod test {
     use {
         super::*,
+        alloc::string::{String, ToString},
         bytemuck::{Pod, Zeroable},
     };
 
@@ -1142,7 +1151,7 @@ mod test {
             if src[8..8 + length].len() != length {
                 return Err(ProgramError::InvalidAccountData);
             }
-            let data = std::str::from_utf8(&src[8..8 + length])
+            let data = core::str::from_utf8(&src[8..8 + length])
                 .unwrap()
                 .to_string();
             Ok(Self { data })
