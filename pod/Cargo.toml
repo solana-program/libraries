@@ -8,28 +8,30 @@ license = "Apache-2.0"
 edition = "2021"
 
 [features]
-bytemuck = ["dep:bytemuck", "dep:bytemuck_derive", "solana-address/bytemuck"]
-serde = ["dep:serde", "dep:serde_derive", "solana-address/serde"]
-borsh = ["dep:borsh", "solana-address/borsh"]
-wincode = ["dep:wincode", "dep:wincode-derive"]
+serde-traits = ["dep:serde"]
+borsh = ["dep:borsh", "solana-pubkey/borsh"]
+wincode = ["dep:wincode"]
 
 [dependencies]
-borsh = { version = "1.5.7", default-features = false, features = ["derive", "unstable__schema"], optional = true }
-bytemuck = { version = "1.23.2", optional = true }
-bytemuck_derive = { version = "1.10.1", optional = true }
-serde = { version = "1.0.228", default-features = false, optional = true, features = ["alloc"] }
-serde_derive = { version = "1.0.228", optional = true }
-solana-address = "2.2.0"
+borsh = { version = "1.5.7", features = ["derive", "unstable__schema"], optional = true }
+bytemuck = { version = "1.23.2" }
+bytemuck_derive = { version = "1.10.1" }
+num-derive = "0.4"
+num_enum = "0.7"
+num-traits = "0.2"
+serde = { version = "1.0.228", optional = true }
+wincode = { version = "0.4.4", features = ["derive"], optional = true }
 solana-program-error = "3.0.0"
 solana-program-option = "3.0.0"
-wincode = { version = "0.4.4", default-features = false, optional = true }
-wincode-derive = { version = "0.4.2", optional = true }
+solana-pubkey = "3.0.0"
+solana-zk-sdk = "4.0.0"
+thiserror = "2.0"
 
 [dev-dependencies]
+base64 = { version = "0.22.1" }
 serde_json = "1.0.145"
-spl-pod = { path = ".", features = ["bytemuck", "wincode", "borsh"] }
+spl-pod = { path = ".", features = ["wincode"] }
 test-case = "3.3.1"
-wincode = { version = "0.4.4", default-features = false, features = ["alloc"] }
 
 [lib]
 crate-type = ["lib"]
