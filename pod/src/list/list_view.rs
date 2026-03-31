@@ -98,13 +98,6 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
         Ok(view)
     }
 
-    /// Initialize a buffer: sets `length = 0` and returns a mutable `ListViewMut`.
-    pub fn init(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
-        let view = Self::build_mut_view(buf)?;
-        *view.length = L::try_from(0)?;
-        Ok(view)
-    }
-
     /// Internal helper to build a mutable view without validation or initialization.
     #[inline]
     fn build_mut_view(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
@@ -181,13 +174,28 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     }
 }
 
+impl<T: Pod, L> ListView<T, L>
+where
+    L: PodLength,
+    PodSliceError: From<<L as TryFrom<usize>>::Error>,
+{
+    /// Initialize a buffer: sets `length = 0` and returns a mutable `ListViewMut`.
+    pub fn init(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
+        let view = Self::build_mut_view(buf)?;
+        *view.length = L::try_from(0).map_err(PodSliceError::from)?;
+        Ok(view)
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    #[cfg(not(target_arch = "bpf"))]
+    use crate::primitives::PodU128;
     use {
         super::*,
         crate::{
             list::List,
-            primitives::{PodU128, PodU16, PodU32, PodU64},
+            primitives::{PodU16, PodU32, PodU64},
         },
         bytemuck_derive::{Pod as DerivePod, Zeroable},
     };
@@ -641,5 +649,6 @@ mod tests {
     test_list_view_for_length_type!(list_view_with_pod_u16, PodU16);
     test_list_view_for_length_type!(list_view_with_pod_u32, PodU32);
     test_list_view_for_length_type!(list_view_with_pod_u64, PodU64);
+    #[cfg(not(target_arch = "bpf"))]
     test_list_view_for_length_type!(list_view_with_pod_u128, PodU128);
 }

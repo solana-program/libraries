@@ -1,147 +1,11 @@
-//! primitive types that can be used in `Pod`s
-#[cfg(feature = "borsh")]
-use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use bytemuck_derive::{Pod, Zeroable};
-#[cfg(feature = "serde-traits")]
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "wincode")]
-use wincode::{SchemaRead, SchemaWrite};
-
-/// The standard `bool` is not a `Pod`, define a replacement that is
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "bool", into = "bool"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodBool(pub u8);
-impl PodBool {
-    pub const fn from_bool(b: bool) -> Self {
-        Self(if b { 1 } else { 0 })
-    }
-}
-
-impl From<bool> for PodBool {
-    fn from(b: bool) -> Self {
-        Self::from_bool(b)
-    }
-}
-
-impl From<&bool> for PodBool {
-    fn from(b: &bool) -> Self {
-        Self(if *b { 1 } else { 0 })
-    }
-}
-
-impl From<&PodBool> for bool {
-    fn from(b: &PodBool) -> Self {
-        b.0 != 0
-    }
-}
-
-impl From<PodBool> for bool {
-    fn from(b: PodBool) -> Self {
-        b.0 != 0
-    }
-}
-
-/// Simple macro for implementing conversion functions between Pod* integers and
-/// standard integers.
-///
-/// The standard integer types can cause alignment issues when placed in a `Pod`,
-/// so these replacements are usable in all `Pod`s.
-#[macro_export]
-macro_rules! impl_int_conversion {
-    ($P:ty, $I:ty) => {
-        impl $P {
-            pub const fn from_primitive(n: $I) -> Self {
-                Self(n.to_le_bytes())
-            }
-        }
-        impl From<$I> for $P {
-            fn from(n: $I) -> Self {
-                Self::from_primitive(n)
-            }
-        }
-        impl From<$P> for $I {
-            fn from(pod: $P) -> Self {
-                Self::from_le_bytes(pod.0)
-            }
-        }
-    };
-}
-
-/// `u16` type that can be used in `Pod`s
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "u16", into = "u16"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodU16(pub [u8; 2]);
-impl_int_conversion!(PodU16, u16);
-
-/// `i16` type that can be used in Pods
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "i16", into = "i16"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodI16(pub [u8; 2]);
-impl_int_conversion!(PodI16, i16);
-
-/// `u32` type that can be used in `Pod`s
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(
-    feature = "borsh",
-    derive(BorshDeserialize, BorshSerialize, BorshSchema)
-)]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "u32", into = "u32"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodU32(pub [u8; 4]);
-impl_int_conversion!(PodU32, u32);
-
-/// `u64` type that can be used in Pods
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(
-    feature = "borsh",
-    derive(BorshDeserialize, BorshSerialize, BorshSchema)
-)]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "u64", into = "u64"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodU64(pub [u8; 8]);
-impl_int_conversion!(PodU64, u64);
-
-/// `i64` type that can be used in Pods
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "i64", into = "i64"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodI64([u8; 8]);
-impl_int_conversion!(PodI64, i64);
-
-/// `u128` type that can be used in Pods
-#[cfg_attr(feature = "wincode", derive(SchemaRead, SchemaWrite))]
-#[cfg_attr(feature = "wincode", wincode(assert_zero_copy))]
-#[cfg_attr(
-    feature = "borsh",
-    derive(BorshDeserialize, BorshSerialize, BorshSchema)
-)]
-#[cfg_attr(feature = "serde-traits", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde-traits", serde(from = "u128", into = "u128"))]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct PodU128(pub [u8; 16]);
-impl_int_conversion!(PodU128, u128);
+//! Primitive types that can be used in `Pod`s.
+//!
+//! These are re-exported from [`solana_zero_copy::unaligned`].
+#[cfg(not(target_arch = "bpf"))]
+pub use solana_zero_copy::unaligned::U128 as PodU128;
+pub use solana_zero_copy::unaligned::{
+    Bool as PodBool, I16 as PodI16, I64 as PodI64, U16 as PodU16, U32 as PodU32, U64 as PodU64,
+};
 
 #[cfg(test)]
 mod tests {
@@ -259,6 +123,7 @@ mod tests {
         assert_eq!(pod_i64, deserialized);
     }
 
+    #[cfg(not(target_arch = "bpf"))]
     #[test]
     fn test_pod_u128() {
         assert!(pod_from_bytes::<PodU128>(&[]).is_err());
@@ -271,7 +136,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(all(feature = "serde-traits", not(target_arch = "bpf")))]
     #[test]
     fn test_pod_u128_serde() {
         let pod_u128: PodU128 = u128::MAX.into();
@@ -294,6 +159,7 @@ mod tests {
         #[test_case(PodU32::from_primitive(u32::MAX))]
         #[test_case(PodU64::from_primitive(u64::MAX))]
         #[test_case(PodI64::from_primitive(i64::MIN))]
+        #[cfg(not(target_arch = "bpf"))]
         #[test_case(PodU128::from_primitive(u128::MAX))]
         fn wincode_roundtrip<
             T: PartialEq

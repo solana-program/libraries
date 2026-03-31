@@ -53,7 +53,10 @@ mod tests {
         length: usize,
         capacity: usize,
         items: &[T],
-    ) -> Vec<u8> {
+    ) -> Vec<u8>
+    where
+        <L as TryFrom<usize>>::Error: std::fmt::Debug,
+    {
         let size = ListView::<T, L>::size_of(capacity).unwrap();
         let mut buffer = vec![0u8; size];
 
