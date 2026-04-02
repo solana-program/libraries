@@ -44,6 +44,11 @@ on:
         required: true
         default: true
         type: boolean
+      run-semver:
+        description: Run semver checks
+        required: false
+        default: true
+        type: boolean
       create-release:
         description: Create a GitHub release
         required: true
@@ -84,4 +89,5 @@ jobs:
       version: ${{ inputs.version }}
       create-release: ${{ inputs.create-release }}
       dry-run: ${{ inputs.dry-run }}
+      run-semver: ${{ inputs.run-semver }}
     secrets: inherit
