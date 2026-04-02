@@ -46,7 +46,7 @@ on:
         type: boolean
       run-semver:
         description: Run semver checks
-        required: false
+        required: true
         default: true
         type: boolean
       create-release:
