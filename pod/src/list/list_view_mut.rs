@@ -16,7 +16,11 @@ pub struct ListViewMut<'data, T: Pod, L: PodLength = PodU32> {
     pub(crate) capacity: usize,
 }
 
-impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
+impl<T: Pod, L> ListViewMut<'_, T, L>
+where
+    L: PodLength,
+    PodSliceError: From<<L as TryFrom<usize>>::Error>,
+{
     /// Add another item to the slice
     pub fn push(&mut self, item: T) -> Result<(), ProgramError> {
         let length = (*self.length).into();
@@ -24,7 +28,7 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
             Err(PodSliceError::BufferTooSmall.into())
         } else {
             self.data[length] = item;
-            *self.length = L::try_from(length.saturating_add(1))?;
+            *self.length = L::try_from(length.saturating_add(1)).map_err(PodSliceError::from)?;
             Ok(())
         }
     }
@@ -47,7 +51,7 @@ impl<T: Pod, L: PodLength> ListViewMut<'_, T, L> {
 
         // Store the new length (len - 1)
         let new_len = len.checked_sub(1).unwrap();
-        *self.length = L::try_from(new_len)?;
+        *self.length = L::try_from(new_len).map_err(PodSliceError::from)?;
 
         Ok(removed_item)
     }
@@ -110,7 +114,10 @@ mod tests {
     fn init_view_mut<T: Pod, L: PodLength>(
         buffer: &mut Vec<u8>,
         capacity: usize,
-    ) -> ListViewMut<T, L> {
+    ) -> ListViewMut<T, L>
+    where
+        PodSliceError: From<<L as TryFrom<usize>>::Error>,
+    {
         let size = ListView::<T, L>::size_of(capacity).unwrap();
         buffer.resize(size, 0);
         ListView::<T, L>::init(buffer).unwrap()
