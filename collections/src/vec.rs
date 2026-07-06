@@ -144,10 +144,12 @@ where
     fn size_of(src: &Self::Src) -> WriteResult<usize> {
         // Sum the serialized size of each element, matching the per-element
         // decoding performed by the read side.
-        let mut expected_size = 0usize;
-        for item in src.0.iter() {
-            expected_size = expected_size.saturating_add(<T as SchemaWrite<C>>::size_of(item)?);
-        }
+        let expected_size = src
+            .0
+            .iter()
+            .try_fold(0usize, |size, item| -> WriteResult<usize> {
+                Ok(size.saturating_add(<T as SchemaWrite<C>>::size_of(item)?))
+            })?;
 
         // `Vec` capacity is limited to `isize::MAX`.
         if expected_size > isize::MAX as usize {
@@ -163,11 +165,9 @@ where
     fn write(mut writer: impl Writer, src: &Self::Src) -> WriteResult<()> {
         // Serialize each item via its schema so the written bytes match the
         // per-element decoding performed by the read side.
-        for item in src.0.iter() {
-            <T as SchemaWrite<C>>::write(&mut writer, item)?;
-        }
-
-        Ok(())
+        src.0
+            .iter()
+            .try_for_each(|item| T::write(&mut writer, item))
     }
 }
 
@@ -274,11 +274,12 @@ macro_rules! prefixed_vec_type {
                 // Start with the length prefix, then sum the serialized size of
                 // each element, matching the per-element decoding performed by
                 // the read side.
-                let mut expected_size = core::mem::size_of::<$prefix_type>();
-                for item in src.0.iter() {
-                    expected_size = expected_size
-                        .saturating_add(<T as SchemaWrite<C>>::size_of(item)?);
-                }
+                let expected_size = src
+                    .0
+                    .iter()
+                    .try_fold(core::mem::size_of::<$prefix_type>(), |size, item| -> WriteResult<usize> {
+                        Ok(size.saturating_add(<T as SchemaWrite<C>>::size_of(item)?))
+                    })?;
 
                 // `Vec` capacity is limited to `isize::MAX`.
                 if expected_size > isize::MAX as usize {
@@ -299,11 +300,9 @@ macro_rules! prefixed_vec_type {
                 )?;
                 // Serialize each item via its schema so the written bytes match
                 // the per-element decoding performed by the read side.
-                for item in src.0.iter() {
-                    <T as SchemaWrite<C>>::write(&mut writer, item)?;
-                }
-
-                Ok(())
+                src.0
+                    .iter()
+                    .try_for_each(|item| T::write(&mut writer, item))
             }
         }
 
