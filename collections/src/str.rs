@@ -17,12 +17,14 @@ use borsh::{
     io::{ErrorKind, Read},
     BorshDeserialize, BorshSerialize,
 };
+#[cfg(any(feature = "borsh", feature = "wincode"))]
+use core::str::from_utf8;
 use {
     crate::{TrailingVec, U16PrefixedVec, U32PrefixedVec, U64PrefixedVec, U8PrefixedVec},
     core::{
         fmt::{Debug, Formatter},
         ops::Deref,
-        str::{from_utf8, from_utf8_unchecked},
+        str::from_utf8_unchecked,
     },
 };
 #[cfg(feature = "wincode")]
