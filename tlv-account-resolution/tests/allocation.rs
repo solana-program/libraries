@@ -18,6 +18,9 @@ use {
 
 struct CountingAllocator;
 
+// Process-global and never decremented: a second `#[test]` in this file would
+// run on a parallel thread and pollute the measured deltas, so keep this file
+// to a single test.
 static ALLOCATED_BYTES: AtomicUsize = AtomicUsize::new(0);
 
 unsafe impl GlobalAlloc for CountingAllocator {
