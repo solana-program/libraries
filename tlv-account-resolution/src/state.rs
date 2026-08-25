@@ -339,7 +339,7 @@ impl ExtraAccountMetaList {
         // resolution completes
         let mut resolved_account_infos = Vec::with_capacity(extra_account_metas.len());
 
-        for (index, extra_meta) in extra_account_metas.iter().enumerate() {
+        for extra_meta in extra_account_metas.iter() {
             let mut meta = extra_meta.resolve(
                 &cpi_instruction.data,
                 &cpi_instruction.program_id,
@@ -356,11 +356,7 @@ impl ExtraAccountMetaList {
                 .find(|&x| *x.key == meta.pubkey)
                 .ok_or(AccountResolutionError::IncorrectAccount)?;
 
-            // The final resolved account's data can never be referenced by a
-            // later meta, so it does not need to be borrowed
-            if index + 1 < extra_account_metas.len() {
-                account_key_data_refs.push((*account_info.key, account_info.try_borrow_data()?));
-            }
+            account_key_data_refs.push((*account_info.key, account_info.try_borrow_data()?));
             cpi_instruction.accounts.push(meta);
             resolved_account_infos.push(account_info.clone());
         }
