@@ -214,6 +214,9 @@ impl ExtraAccountMetaList {
     ) -> Result<(), ProgramError> {
         let state = TlvStateBorrowed::unpack(data).unwrap();
         let extra_meta_list = ExtraAccountMetaList::unpack_with_tlv_state::<T>(&state)?;
+        if extra_meta_list.is_empty() {
+            return Ok(());
+        }
 
         let initial_accounts_len = account_infos.len() - extra_meta_list.len();
 
@@ -223,25 +226,25 @@ impl ExtraAccountMetaList {
             .map(account_info_to_meta)
             .collect::<Vec<_>>();
 
-        for (i, config) in extra_meta_list.iter().enumerate() {
-            let meta = {
-                // Create a list of `Ref`s so we can reference account data in the
-                // resolution step
-                let account_key_data_refs = account_infos
-                    .iter()
-                    .map(|info| {
-                        let key = *info.key;
-                        let data = info.try_borrow_data()?;
-                        Ok((key, data))
-                    })
-                    .collect::<Result<Vec<_>, ProgramError>>()?;
+        // Create a list of `Ref`s so we can reference account data in the
+        // resolution step. The list is built once, since rebuilding it for
+        // every meta makes cumulative heap usage quadratic under the
+        // never-freeing SBF bump allocator
+        let account_key_data_refs = account_infos
+            .iter()
+            .map(|info| {
+                let key = *info.key;
+                let data = info.try_borrow_data()?;
+                Ok((key, data))
+            })
+            .collect::<Result<Vec<_>, ProgramError>>()?;
 
-                config.resolve(instruction_data, program_id, |usize| {
-                    account_key_data_refs
-                        .get(usize)
-                        .map(|(pubkey, opt_data)| (pubkey, Some(opt_data.as_ref())))
-                })?
-            };
+        for (i, config) in extra_meta_list.iter().enumerate() {
+            let meta = config.resolve(instruction_data, program_id, |usize| {
+                account_key_data_refs
+                    .get(usize)
+                    .map(|(pubkey, opt_data)| (pubkey, Some(opt_data.as_ref())))
+            })?;
 
             // Ensure the account is in the correct position
             let expected_index = i
@@ -313,41 +316,54 @@ impl ExtraAccountMetaList {
         let state = TlvStateBorrowed::unpack(data)?;
         let bytes = state.get_first_bytes::<T>()?;
         let extra_account_metas = ListView::<ExtraAccountMeta>::unpack(bytes)?;
+        if extra_account_metas.is_empty() {
+            return Ok(());
+        }
+
+        // Create a list of `Ref`s so we can reference account data in the
+        // resolution step. The list is built once and each resolved account
+        // is appended to it, since rebuilding it for every meta makes
+        // cumulative heap usage quadratic under the never-freeing SBF bump
+        // allocator
+        let mut account_key_data_refs = cpi_account_infos
+            .iter()
+            .map(|info| {
+                let key = *info.key;
+                let data = info.try_borrow_data()?;
+                Ok((key, data))
+            })
+            .collect::<Result<Vec<_>, ProgramError>>()?;
+
+        // Collect resolved account infos separately, since
+        // `account_key_data_refs` holds borrows of `cpi_account_infos` until
+        // resolution completes
+        let mut resolved_account_infos = Vec::with_capacity(extra_account_metas.len());
 
         for extra_meta in extra_account_metas.iter() {
-            let mut meta = {
-                // Create a list of `Ref`s so we can reference account data in the
-                // resolution step
-                let account_key_data_refs = cpi_account_infos
-                    .iter()
-                    .map(|info| {
-                        let key = *info.key;
-                        let data = info.try_borrow_data()?;
-                        Ok((key, data))
-                    })
-                    .collect::<Result<Vec<_>, ProgramError>>()?;
-
-                extra_meta.resolve(
-                    &cpi_instruction.data,
-                    &cpi_instruction.program_id,
-                    |usize| {
-                        account_key_data_refs
-                            .get(usize)
-                            .map(|(pubkey, opt_data)| (pubkey, Some(opt_data.as_ref())))
-                    },
-                )?
-            };
+            let mut meta = extra_meta.resolve(
+                &cpi_instruction.data,
+                &cpi_instruction.program_id,
+                |usize| {
+                    account_key_data_refs
+                        .get(usize)
+                        .map(|(pubkey, opt_data)| (pubkey, Some(opt_data.as_ref())))
+                },
+            )?;
             de_escalate_account_meta(&mut meta, &cpi_instruction.accounts);
 
             let account_info = account_infos
                 .iter()
                 .find(|&x| *x.key == meta.pubkey)
-                .ok_or(AccountResolutionError::IncorrectAccount)?
-                .clone();
+                .ok_or(AccountResolutionError::IncorrectAccount)?;
 
+            account_key_data_refs.push((*account_info.key, account_info.try_borrow_data()?));
             cpi_instruction.accounts.push(meta);
-            cpi_account_infos.push(account_info);
+            resolved_account_infos.push(account_info.clone());
         }
+
+        // Release the data borrows before appending the resolved accounts
+        drop(account_key_data_refs);
+        cpi_account_infos.extend(resolved_account_infos);
         Ok(())
     }
 }
