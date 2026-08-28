@@ -33,10 +33,10 @@
         "deploy": "npm run deploy:docs",
         "deploy:docs": "npm run docs && gh-pages --dest type-length-value/js --dist docs --dotfiles",
         "docs": "shx rm -rf docs && typedoc && shx cp .nojekyll docs/",
-        "format": "prettier --check src test",
-        "format:fix": "prettier --write src test",
-        "lint": "eslint --max-warnings 0 src test",
-        "lint:fix": "eslint --fix src test",
+        "format": "oxfmt --check src test",
+        "format:fix": "oxfmt --write src test",
+        "lint": "oxlint --max-warnings 0",
+        "lint:fix": "oxlint --fix",
         "postbuild": "shx echo '{ \"type\": \"commonjs\" }' > lib/cjs/package.json",
         "reinstall": "npm run nuke && npm install",
         "release": "npm run clean && npm run build",
@@ -48,22 +48,17 @@
         "buffer": "^6.0.3"
     },
     "devDependencies": {
-        "@eslint/eslintrc": "^3.3.1",
-        "@eslint/js": "^9.24.0",
-        "@solana/prettier-config-solana": "^0.0.5",
         "@types/chai": "^5.0.1",
         "@types/mocha": "^10.0.10",
         "@types/node": "^22.10.2",
         "chai": "^5.1.2",
-        "eslint": "^9.24.0",
-        "eslint-plugin-import-extensions": "^0.1.5",
         "gh-pages": "^6.2.0",
         "mocha": "^11.0.1",
-        "prettier": "^3.4.2",
+        "oxfmt": "^0.60.0",
+        "oxlint": "^1.75.0",
         "shx": "^0.3.4",
         "ts-node": "^10.9.2",
         "typedoc": "^0.27.4",
-        "typescript": "^5.8.3",
-        "typescript-eslint": "^8.30.0"
+        "typescript": "^5.8.3"
     }
 }
