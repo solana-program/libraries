@@ -1716,7 +1716,7 @@ dependencies = [
 
 [[package]]
 name = "spl-pod"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "base64",
  "borsh",
@@ -1732,7 +1732,7 @@ dependencies = [
  "solana-pubkey",
  "solana-zero-copy",
  "solana-zk-sdk",
- "spl-pod 0.7.3",
+ "spl-pod 0.7.4",
  "test-case",
  "thiserror 2.0.18",
  "wincode",
@@ -1782,7 +1782,7 @@ dependencies = [
  "solana-pubkey",
  "spl-discriminator 0.5.2",
  "spl-list-view",
- "spl-pod 0.7.3",
+ "spl-pod 0.7.4",
  "spl-type-length-value 0.9.1",
  "thiserror 2.0.18",
  "tokio",
