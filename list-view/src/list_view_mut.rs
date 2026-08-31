@@ -107,7 +107,7 @@ mod tests {
     fn init_view_mut<T: Pod, L: PodLength>(
         buffer: &mut Vec<u8>,
         capacity: usize,
-    ) -> ListViewMut<T, L> {
+    ) -> ListViewMut<'_, T, L> {
         let size = ListView::<T, L>::size_of(capacity).unwrap();
         buffer.resize(size, 0);
         ListView::<T, L>::init(buffer).unwrap()

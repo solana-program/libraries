@@ -57,7 +57,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     }
 
     /// Unpack a read-only buffer into a `ListViewReadOnly`
-    pub fn unpack(buf: &[u8]) -> Result<ListViewReadOnly<T, L>, ProgramError> {
+    pub fn unpack(buf: &[u8]) -> Result<ListViewReadOnly<'_, T, L>, ProgramError> {
         let layout = Self::calculate_layout(buf.len())?;
 
         // Slice the buffer to get the length prefix and the data.
@@ -87,7 +87,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     }
 
     /// Unpack the mutable buffer into a mutable `ListViewMut`
-    pub fn unpack_mut(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
+    pub fn unpack_mut(buf: &mut [u8]) -> Result<ListViewMut<'_, T, L>, ProgramError> {
         let view = Self::build_mut_view(buf)?;
         if (*view.length).into() > view.capacity {
             return Err(ListViewError::BufferTooSmall.into());
@@ -96,7 +96,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
     }
 
     /// Initialize a buffer: sets `length = 0` and returns a mutable `ListViewMut`.
-    pub fn init(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
+    pub fn init(buf: &mut [u8]) -> Result<ListViewMut<'_, T, L>, ProgramError> {
         let view = Self::build_mut_view(buf)?;
         *view.length = L::try_from(0usize).map_err(ListViewError::from)?;
         Ok(view)
@@ -104,7 +104,7 @@ impl<T: Pod, L: PodLength> ListView<T, L> {
 
     /// Internal helper to build a mutable view without validation or initialization.
     #[inline]
-    fn build_mut_view(buf: &mut [u8]) -> Result<ListViewMut<T, L>, ProgramError> {
+    fn build_mut_view(buf: &mut [u8]) -> Result<ListViewMut<'_, T, L>, ProgramError> {
         let layout = Self::calculate_layout(buf.len())?;
 
         // Split the buffer to get the length prefix and the data.
