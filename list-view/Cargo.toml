@@ -1,6 +1,6 @@
 [package]
 name = "spl-list-view"
-version = "0.1.0"
+version = "0.1.1"
 description = "ListView: a zero-copy, variable-length array view"
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]
 repository = "https://github.com/solana-program/libraries"
