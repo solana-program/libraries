@@ -20,9 +20,9 @@ solana-account-info = "3.0.0"
 solana-instruction = { version = "3.0.0", features = ["std"] }
 solana-program-error = "3.0.0"
 solana-pubkey = { version = "3.0.0", features = ["curve25519"] }
+solana-zero-copy = { version = "1.0.0", features = ["bytemuck"] }
 spl-discriminator = { version = "0.5.1", path = "../discriminator" }
 spl-list-view = { version = "0.1.1", path = "../list-view" }
-spl-pod = { version = "0.7.4", path = "../pod" }
 spl-type-length-value = { version = "0.9.1", path = "../type-length-value" }
 thiserror = "2.0"
 
