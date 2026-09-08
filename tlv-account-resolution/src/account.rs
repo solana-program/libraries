@@ -11,7 +11,7 @@ use {
     solana_instruction::AccountMeta,
     solana_program_error::ProgramError,
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
-    spl_pod::primitives::PodBool,
+    solana_zero_copy::unaligned::Bool,
 };
 
 /// Resolve a program-derived address (PDA) from the instruction data
@@ -129,9 +129,9 @@ pub struct ExtraAccountMeta {
     /// data used to derive the pubkey (account or instruction data).
     pub address_config: [u8; 32],
     /// Whether the account should sign
-    pub is_signer: PodBool,
+    pub is_signer: Bool,
     /// Whether the account should be writable
-    pub is_writable: PodBool,
+    pub is_writable: Bool,
 }
 /// Helper used to know when the top bit is set, to interpret the
 /// discriminator as an index rather than as a type

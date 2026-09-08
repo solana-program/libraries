@@ -6,9 +6,9 @@ use {
     solana_instruction::{AccountMeta, Instruction},
     solana_program_error::ProgramError,
     solana_pubkey::Pubkey,
+    solana_zero_copy::unaligned::U32,
     spl_discriminator::SplDiscriminate,
     spl_list_view::{ListView, ListViewReadOnly},
-    spl_pod::primitives::PodU32,
     spl_type_length_value::state::{TlvState, TlvStateBorrowed, TlvStateMut},
     std::future::Future,
 };
@@ -189,9 +189,9 @@ impl ExtraAccountMetaList {
     /// `TlvStateBorrowed`. I hope there's a better way to do this!
     pub fn unpack_with_tlv_state<'a, T: SplDiscriminate>(
         tlv_state: &'a TlvStateBorrowed,
-    ) -> Result<ListViewReadOnly<'a, ExtraAccountMeta, PodU32>, ProgramError> {
+    ) -> Result<ListViewReadOnly<'a, ExtraAccountMeta, U32>, ProgramError> {
         let bytes = tlv_state.get_first_bytes::<T>()?;
-        ListView::<ExtraAccountMeta, PodU32>::unpack(bytes)
+        ListView::<ExtraAccountMeta, U32>::unpack(bytes)
     }
 
     /// Get the byte size required to hold `num_items` items
