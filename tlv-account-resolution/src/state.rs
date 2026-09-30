@@ -212,13 +212,19 @@ impl ExtraAccountMetaList {
         program_id: &Pubkey,
         data: &[u8],
     ) -> Result<(), ProgramError> {
-        let state = TlvStateBorrowed::unpack(data).unwrap();
+        let state = TlvStateBorrowed::unpack(data)?;
         let extra_meta_list = ExtraAccountMetaList::unpack_with_tlv_state::<T>(&state)?;
         if extra_meta_list.is_empty() {
             return Ok(());
         }
 
-        let initial_accounts_len = account_infos.len() - extra_meta_list.len();
+        // Ensure the caller provided enough account infos to hold the extra
+        // accounts, or the subtraction below underflows.
+        let initial_accounts_len =
+            account_infos
+                .len()
+                .checked_sub(extra_meta_list.len())
+                .ok_or::<ProgramError>(AccountResolutionError::NotEnoughAccounts.into())?;
 
         // Convert to `AccountMeta` to check resolved metas
         let provided_metas = account_infos
@@ -1701,6 +1707,65 @@ mod tests {
                 &buffer,
             ),
             Ok(()),
+        );
+    }
+
+    #[test]
+    fn check_account_infos_with_fewer_accounts_than_extra_metas_errors() {
+        // A caller (or crafted transaction) providing fewer account infos than
+        // the validation data's extra accounts must error, not underflow the
+        // initial-accounts-length subtraction.
+        let program_id = Pubkey::new_unique();
+
+        let pubkey1 = Pubkey::new_unique();
+        let required_accounts = [
+            ExtraAccountMeta::new_with_pubkey(&pubkey1, false, true).unwrap(),
+            ExtraAccountMeta::new_with_pubkey(&Pubkey::new_unique(), false, false).unwrap(),
+        ];
+
+        let account_size = ExtraAccountMetaList::size_of(required_accounts.len()).unwrap();
+        let mut buffer = vec![0; account_size];
+        ExtraAccountMetaList::init::<TestInstruction>(&mut buffer, &required_accounts).unwrap();
+
+        // No accounts at all — two fewer than the two extra accounts configured.
+        let account_infos: [AccountInfo; 0] = [];
+        assert_eq!(
+            ExtraAccountMetaList::check_account_infos::<TestInstruction>(
+                &account_infos,
+                &[],
+                &program_id,
+                &buffer,
+            )
+            .unwrap_err(),
+            AccountResolutionError::NotEnoughAccounts.into(),
+        );
+    }
+
+    #[test]
+    fn check_account_infos_with_corrupt_validation_data_errors() {
+        // A corrupted validation account (truncated TLV entry) must error
+        // instead of panicking on the unpack.
+        let program_id = Pubkey::new_unique();
+
+        let pubkey1 = Pubkey::new_unique();
+        let required_accounts = [ExtraAccountMeta::new_with_pubkey(&pubkey1, false, true).unwrap()];
+
+        let account_size = ExtraAccountMetaList::size_of(required_accounts.len()).unwrap();
+        let mut buffer = vec![0; account_size];
+        ExtraAccountMetaList::init::<TestInstruction>(&mut buffer, &required_accounts).unwrap();
+
+        // Truncate the last byte: the entry's declared length no longer matches
+        // the data, so the unpack must fail.
+        let corrupt = &buffer[..buffer.len() - 1];
+        assert!(
+            ExtraAccountMetaList::check_account_infos::<TestInstruction>(
+                &[],
+                &[],
+                &program_id,
+                corrupt,
+            )
+            .is_err(),
+            "corrupt validation data must error, not panic"
         );
     }
 }
