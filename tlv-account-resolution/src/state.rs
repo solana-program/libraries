@@ -218,8 +218,6 @@ impl ExtraAccountMetaList {
             return Ok(());
         }
 
-        // Ensure the caller provided enough account infos to hold the extra
-        // accounts, or the subtraction below underflows.
         let initial_accounts_len =
             account_infos
                 .len()
@@ -1712,9 +1710,6 @@ mod tests {
 
     #[test]
     fn check_account_infos_with_fewer_accounts_than_extra_metas_errors() {
-        // A caller (or crafted transaction) providing fewer account infos than
-        // the validation data's extra accounts must error, not underflow the
-        // initial-accounts-length subtraction.
         let program_id = Pubkey::new_unique();
 
         let pubkey1 = Pubkey::new_unique();
@@ -1743,8 +1738,6 @@ mod tests {
 
     #[test]
     fn check_account_infos_with_corrupt_validation_data_errors() {
-        // A corrupted validation account (truncated TLV entry) must error
-        // instead of panicking on the unpack.
         let program_id = Pubkey::new_unique();
 
         let pubkey1 = Pubkey::new_unique();
