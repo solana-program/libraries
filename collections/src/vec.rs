@@ -35,15 +35,9 @@ use {
     },
 };
 
-/// Maximum number of bytes preallocated from a deserialized length prefix.
-///
-/// The prefix is untrusted, so the vector grows as items are actually read
-/// instead of reserving the full declared length up front.
 #[cfg(any(feature = "borsh", feature = "wincode"))]
 const MAX_PREALLOCATION_BYTES: usize = 4096;
 
-/// Returns a capacity for `prefix` items that is bounded by
-/// `MAX_PREALLOCATION_BYTES`.
 #[cfg(any(feature = "borsh", feature = "wincode"))]
 fn cautious_capacity<T>(prefix: usize) -> usize {
     MAX_PREALLOCATION_BYTES
@@ -548,8 +542,6 @@ mod tests {
 
     #[test]
     fn prefixed_vec_borsh_with_oversized_prefix() {
-        // A `u64::MAX` length prefix with no elements must be rejected
-        // instead of trying to preallocate `u64::MAX` items.
         let bytes = u64::MAX.to_le_bytes();
 
         let result = U64PrefixedVec::<u8>::try_from_slice(&bytes);
@@ -559,8 +551,6 @@ mod tests {
 
     #[test]
     fn prefixed_vec_wincode_with_oversized_prefix() {
-        // A `u64::MAX` length prefix with no elements must be rejected
-        // instead of trying to preallocate `u64::MAX` items.
         let bytes = u64::MAX.to_le_bytes();
 
         let result = wincode::deserialize::<U64PrefixedVec<u8>>(&bytes);
