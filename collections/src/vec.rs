@@ -35,6 +35,16 @@ use {
     },
 };
 
+#[cfg(any(feature = "borsh", feature = "wincode"))]
+const MAX_PREALLOCATION_BYTES: usize = 4096;
+
+#[cfg(any(feature = "borsh", feature = "wincode"))]
+fn cautious_capacity<T>(prefix: usize) -> usize {
+    MAX_PREALLOCATION_BYTES
+        .checked_div(core::mem::size_of::<T>())
+        .map_or(prefix, |max| prefix.min(max))
+}
+
 /// A `Vec<T>` serialized without a length prefix.
 ///
 /// This is useful for serializing a `Vec<T>` that is the last field
@@ -247,7 +257,7 @@ macro_rules! prefixed_vec_type {
         impl<T: BorshDeserialize> BorshDeserialize for $name<T> {
             fn deserialize_reader<R: Read>(reader: &mut R) -> borsh::io::Result<Self> {
                 let prefix = $prefix_type::deserialize_reader(reader)? as usize;
-                let mut items: Vec<T> = Vec::with_capacity(prefix);
+                let mut items: Vec<T> = Vec::with_capacity(cautious_capacity::<T>(prefix));
 
                 while items.len() < prefix {
                     let Ok(item) = T::deserialize_reader(reader) else {
@@ -323,7 +333,7 @@ macro_rules! prefixed_vec_type {
                 // SAFETY: We have just read the prefix from the reader, so it is initialized.
                 let prefix = unsafe { prefix.assume_init() } as usize;
 
-                let mut items = Vec::with_capacity(prefix);
+                let mut items = Vec::with_capacity(cautious_capacity::<T>(prefix));
 
                 while items.len() < prefix {
                     let Ok(item) = T::get(&mut reader) else {
@@ -528,6 +538,24 @@ mod tests {
 
         assert_eq!(serialized.len(), 8);
         assert_eq!(serialized.as_slice(), &[!(0u64); 8]);
+    }
+
+    #[test]
+    fn prefixed_vec_borsh_with_oversized_prefix() {
+        let bytes = u64::MAX.to_le_bytes();
+
+        let result = U64PrefixedVec::<u8>::try_from_slice(&bytes);
+
+        assert_eq!(result.unwrap_err().kind(), ErrorKind::InvalidData);
+    }
+
+    #[test]
+    fn prefixed_vec_wincode_with_oversized_prefix() {
+        let bytes = u64::MAX.to_le_bytes();
+
+        let result = wincode::deserialize::<U64PrefixedVec<u8>>(&bytes);
+
+        assert!(result.is_err());
     }
 
     /// A non-POD element type: its wincode-serialized size (5 bytes: a `u8`
