@@ -156,7 +156,7 @@ impl ExtraAccountMetaList {
         data: &mut [u8],
         extra_account_metas: &[ExtraAccountMeta],
     ) -> Result<(), ProgramError> {
-        let mut state = TlvStateMut::unpack(data).unwrap();
+        let mut state = TlvStateMut::unpack(data)?;
         let tlv_size = ListView::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let (bytes, _) = state.alloc::<T>(tlv_size, false)?;
         let mut validation_data = ListView::<ExtraAccountMeta>::init(bytes)?;
@@ -172,7 +172,7 @@ impl ExtraAccountMetaList {
         data: &mut [u8],
         extra_account_metas: &[ExtraAccountMeta],
     ) -> Result<(), ProgramError> {
-        let mut state = TlvStateMut::unpack(data).unwrap();
+        let mut state = TlvStateMut::unpack(data)?;
         let tlv_size = ListView::<ExtraAccountMeta>::size_of(extra_account_metas.len())?;
         let bytes = state.realloc_first::<T>(tlv_size)?;
         let mut validation_data = ListView::<ExtraAccountMeta>::init(bytes)?;
@@ -1759,6 +1759,25 @@ mod tests {
             )
             .is_err(),
             "corrupt validation data must error, not panic"
+        );
+    }
+
+    #[test]
+    fn init_and_update_with_malformed_data_error() {
+        let required_accounts =
+            [ExtraAccountMeta::new_with_pubkey(&Pubkey::new_unique(), false, true).unwrap()];
+
+        // Too short for a TLV header, so the unpack fails.
+        let mut buffer = vec![1u8; 4];
+        assert_eq!(
+            ExtraAccountMetaList::init::<TestInstruction>(&mut buffer, &required_accounts)
+                .unwrap_err(),
+            ProgramError::InvalidAccountData,
+        );
+        assert_eq!(
+            ExtraAccountMetaList::update::<TestInstruction>(&mut buffer, &required_accounts)
+                .unwrap_err(),
+            ProgramError::InvalidAccountData,
         );
     }
 }
