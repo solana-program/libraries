@@ -440,18 +440,20 @@ impl<'data> TlvStateMut<'data> {
 
         let discriminator = ArrayDiscriminator::try_from(&self.data[type_start..length_start])?;
         if discriminator == ArrayDiscriminator::UNINITIALIZED {
+            // check everything before writing, so that a failed alloc leaves
+            // the buffer untouched
+            let tlv_length = Length::try_from(length)?;
+            let value_end = value_start.saturating_add(length);
+            if self.data.len() < value_end {
+                return Err(ProgramError::InvalidAccountData);
+            }
             // write type
             let discriminator_ref = &mut self.data[type_start..length_start];
             discriminator_ref.copy_from_slice(V::SPL_DISCRIMINATOR.as_ref());
             // write length
             let length_ref =
                 pod_from_bytes_mut::<Length>(&mut self.data[length_start..value_start])?;
-            *length_ref = Length::try_from(length)?;
-
-            let value_end = value_start.saturating_add(length);
-            if self.data.len() < value_end {
-                return Err(ProgramError::InvalidAccountData);
-            }
+            *length_ref = tlv_length;
             Ok((
                 &mut self.data[value_start..value_end],
                 value_repetition_number,
@@ -954,6 +956,39 @@ mod test {
             state.get_discriminators().unwrap_err(),
             ProgramError::InvalidAccountData
         );
+    }
+
+    #[test]
+    fn alloc_failure_leaves_buffer_untouched() {
+        let account_size = get_base_len() + size_of::<TestValue>();
+        let mut buffer = vec![0; account_size - 1];
+
+        // value doesn't fit
+        let mut state = TlvStateMut::unpack(&mut buffer).unwrap();
+        assert_eq!(
+            state
+                .alloc::<TestValue>(size_of::<TestValue>(), false)
+                .unwrap_err(),
+            ProgramError::InvalidAccountData,
+        );
+        assert_eq!(buffer, vec![0; account_size - 1]);
+
+        // length doesn't fit in a `Length`
+        let mut state = TlvStateMut::unpack(&mut buffer).unwrap();
+        assert_eq!(
+            state
+                .alloc::<TestValue>(u32::MAX as usize + 1, false)
+                .unwrap_err(),
+            ProgramError::AccountDataTooSmall,
+        );
+        assert_eq!(buffer, vec![0; account_size - 1]);
+
+        // with enough room, the same alloc succeeds
+        buffer.push(0);
+        let mut state = TlvStateMut::unpack(&mut buffer).unwrap();
+        state
+            .alloc::<TestValue>(size_of::<TestValue>(), false)
+            .unwrap();
     }
 
     #[test]
