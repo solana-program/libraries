@@ -1780,6 +1780,7 @@ dependencies = [
  "solana-instruction",
  "solana-program-error",
  "solana-pubkey",
+ "solana-sha256-hasher",
  "solana-zero-copy",
  "spl-discriminator 0.5.2",
  "spl-list-view",
