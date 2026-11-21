@@ -80,6 +80,13 @@ mod tests {
         data2: &'c [V],
     }
 
+    #[allow(dead_code)]
+    #[derive(SplDiscriminate)]
+    #[discriminator_hash_input("global:my_instruction_with_inline_bounds")]
+    pub struct MyInstruction8<'c, U: Clone + Copy, const N: usize> {
+        data: &'c [U; N],
+    }
+
     fn assert_discriminator<T: spl_discriminator::discriminator::SplDiscriminate>(
         hash_input: &str,
     ) {
@@ -125,6 +132,9 @@ mod tests {
         );
         assert_discriminator::<MyInstruction7<'_, u8, u8>>(
             "global:my_instruction_with_multiple_generics_and_lifetime_and_where",
+        );
+        assert_discriminator::<MyInstruction8<'_, u8, 2>>(
+            "global:my_instruction_with_inline_bounds",
         );
     }
 }

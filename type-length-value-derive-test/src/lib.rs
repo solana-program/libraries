@@ -28,6 +28,31 @@ pub(crate) mod test {
         plate: [u8; 7],
     }
 
+    #[derive(
+        Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize, SplBorshVariableLenPack,
+    )]
+    pub struct Garage<T: BorshDeserialize + BorshSerialize> {
+        vehicles: Vec<T>,
+    }
+
+    #[test]
+    fn test_derive_with_inline_bounds() {
+        let garage = Garage {
+            vehicles: vec![Vehicle::default(), Vehicle::default()],
+        };
+
+        let len = garage.get_packed_len().unwrap();
+        assert_eq!(len, 4 + 15 * 2);
+
+        let mut buffer = vec![0u8; len];
+        garage.pack_into_slice(&mut buffer).unwrap();
+
+        assert_eq!(
+            Garage::<Vehicle>::unpack_from_slice(&buffer).unwrap(),
+            garage
+        );
+    }
+
     #[test]
     fn test_derive() {
         let vehicle = Vehicle {
