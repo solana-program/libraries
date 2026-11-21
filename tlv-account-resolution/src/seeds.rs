@@ -103,7 +103,10 @@ impl Seed {
             // 1 byte for the discriminator
             Self::Uninitialized => 0,
             // 1 byte for the discriminator, 1 byte for the length of the bytes, then the raw bytes
-            Self::Literal { bytes } => 1 + 1 + bytes.len() as u8,
+            // (saturates for literals that could never fit in an address config)
+            Self::Literal { bytes } => u8::try_from(bytes.len())
+                .unwrap_or(u8::MAX)
+                .saturating_add(2),
             // 1 byte for the discriminator, 1 byte for the index, 1 byte for the length
             Self::InstructionData { .. } => 1 + 1 + 1,
             // 1 byte for the discriminator, 1 byte for the index
@@ -251,6 +254,19 @@ fn unpack_seed_account_data(bytes: &[u8]) -> Result<Seed, ProgramError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_pack_oversized_literal() {
+        for len in [254, 255, 256, 300] {
+            let seed = Seed::Literal {
+                bytes: vec![1; len],
+            };
+            assert_eq!(
+                Seed::pack_into_address_config(&[seed]).unwrap_err(),
+                AccountResolutionError::SeedConfigsTooLarge.into()
+            );
+        }
+    }
 
     #[test]
     fn test_pack() {
