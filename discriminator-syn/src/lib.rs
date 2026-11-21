@@ -87,11 +87,11 @@ impl ToTokens for SplDiscriminateBuilder {
 impl From<&SplDiscriminateBuilder> for TokenStream {
     fn from(builder: &SplDiscriminateBuilder) -> Self {
         let ident = &builder.ident;
-        let generics = &builder.generics;
+        let (impl_generics, ty_generics, _) = builder.generics.split_for_impl();
         let where_clause = &builder.where_clause;
         let bytes = get_discriminator_bytes(&builder.hash_input);
         quote! {
-            impl #generics spl_discriminator::discriminator::SplDiscriminate for #ident #generics #where_clause {
+            impl #impl_generics spl_discriminator::discriminator::SplDiscriminate for #ident #ty_generics #where_clause {
                 const SPL_DISCRIMINATOR: spl_discriminator::discriminator::ArrayDiscriminator
                     = spl_discriminator::discriminator::ArrayDiscriminator::new(*#bytes);
             }

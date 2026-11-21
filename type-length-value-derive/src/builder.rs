@@ -70,10 +70,10 @@ impl ToTokens for SplBorshVariableLenPackBuilder {
 impl From<&SplBorshVariableLenPackBuilder> for TokenStream {
     fn from(builder: &SplBorshVariableLenPackBuilder) -> Self {
         let ident = &builder.ident;
-        let generics = &builder.generics;
+        let (impl_generics, ty_generics, _) = builder.generics.split_for_impl();
         let where_clause = &builder.where_clause;
         quote! {
-            impl #generics spl_type_length_value::variable_len_pack::VariableLenPack for #ident #generics #where_clause {
+            impl #impl_generics spl_type_length_value::variable_len_pack::VariableLenPack for #ident #ty_generics #where_clause {
                 fn pack_into_slice(&self, dst: &mut [u8]) -> Result<(), spl_type_length_value::solana_program_error::ProgramError> {
                     borsh::to_writer(&mut dst[..], self).map_err(Into::into)
                 }
