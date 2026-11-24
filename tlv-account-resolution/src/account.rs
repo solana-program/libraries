@@ -8,6 +8,7 @@ use {
     crate::{error::AccountResolutionError, pubkey_data::PubkeyData, seeds::Seed},
     bytemuck::{Pod, Zeroable},
     solana_account_info::AccountInfo,
+    solana_address::{Address, MAX_SEEDS, MAX_SEED_LEN},
     solana_instruction::AccountMeta,
     solana_program_error::ProgramError,
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
@@ -64,52 +65,15 @@ where
             }
         }
     }
-    #[cfg(any(target_os = "solana", target_arch = "bpf"))]
-    if let Some(address) = derive_pda(&pda_seeds, program_id) {
-        return Ok(address);
+    if pda_seeds.len() < MAX_SEEDS && pda_seeds.iter().all(|seed| seed.len() <= MAX_SEED_LEN) {
+        // Empty seeds add no bytes to the hash input.
+        let mut padded: [&[u8]; MAX_SEEDS - 1] = [&[]; MAX_SEEDS - 1];
+        padded[..pda_seeds.len()].copy_from_slice(&pda_seeds);
+        if let Some((address, _)) = Address::derive_program_address(&padded, program_id) {
+            return Ok(address);
+        }
     }
     Ok(Pubkey::find_program_address(&pda_seeds, program_id).0)
-}
-
-/// Derive the canonical PDA using the SHA-256 and curve validation syscalls.
-/// Leave seed lists outside the accepted range to the standard SDK path.
-#[cfg(any(target_os = "solana", target_arch = "bpf", test))]
-fn derive_pda(seeds: &[&[u8]], program_id: &Pubkey) -> Option<Pubkey> {
-    use solana_pubkey::{MAX_SEEDS, MAX_SEED_LEN};
-
-    const PDA_MARKER: &[u8] = b"ProgramDerivedAddress";
-    const BUMPS: [u8; u8::MAX as usize] = {
-        let mut bumps = [0; u8::MAX as usize];
-        let mut index = 0;
-        while index < bumps.len() {
-            bumps[index] = u8::MAX - index as u8;
-            index += 1;
-        }
-        bumps
-    };
-
-    let len = seeds.len();
-    // The bump occupies one seed slot.
-    if len >= MAX_SEEDS || seeds.iter().any(|seed| seed.len() > MAX_SEED_LEN) {
-        return None;
-    }
-
-    let mut parts: [&[u8]; MAX_SEEDS + 2] = [&[]; MAX_SEEDS + 2];
-    parts[..len].copy_from_slice(seeds);
-    parts[len + 1] = program_id.as_ref();
-    parts[len + 2] = PDA_MARKER;
-    let parts = &mut parts[..len + 3];
-
-    // Try the same bumps as the runtime (255 through 1).
-    for bump in &BUMPS {
-        parts[len] = core::slice::from_ref(bump);
-        let hash = solana_sha256_hasher::hashv(parts);
-        let address = Pubkey::new_from_array(hash.to_bytes());
-        if !address.is_on_curve() {
-            return Some(address);
-        }
-    }
-    panic!("Unable to find a viable program address bump seed");
 }
 
 /// Resolve a pubkey from a pubkey data configuration.
@@ -343,28 +307,34 @@ impl TryFrom<&ExtraAccountMeta> for AccountMeta {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        solana_pubkey::{MAX_SEEDS, MAX_SEED_LEN},
-    };
+    use super::*;
 
     #[test]
     fn canonical_pda_matches_sdk() {
-        for case in 0..128u8 {
-            let program_id = Pubkey::new_from_array(solana_sha256_hasher::hash(&[case]).to_bytes());
-            let seed_data: [[u8; MAX_SEED_LEN]; MAX_SEEDS - 1] = core::array::from_fn(|index| {
-                solana_sha256_hasher::hash(&[case, index as u8]).to_bytes()
-            });
-            let seeds: [&[u8]; MAX_SEEDS - 1] = core::array::from_fn(|index| {
-                let len = (usize::from(case) + index) % (MAX_SEED_LEN + 1);
-                &seed_data[index][..len]
-            });
-            let seeds = &seeds[..usize::from(case) % MAX_SEEDS];
-            assert_eq!(
-                derive_pda(seeds, &program_id),
-                Pubkey::try_find_program_address(seeds, &program_id).map(|(address, _)| address),
-                "case {case}"
-            );
+        let program_id = Pubkey::new_unique();
+        let bytes = [42; MAX_SEED_LEN];
+        let lengths = [0, MAX_SEED_LEN, 1, MAX_SEED_LEN / 2];
+        for offset in 0..lengths.len() {
+            let raw_seeds: Vec<&[u8]> = lengths
+                .iter()
+                .cycle()
+                .skip(offset)
+                .take(MAX_SEEDS - 1)
+                .map(|&len| &bytes[..len])
+                .collect();
+            let seeds: Vec<Seed> = raw_seeds
+                .iter()
+                .map(|seed| Seed::Literal {
+                    bytes: seed.to_vec(),
+                })
+                .collect();
+            for count in 0..MAX_SEEDS {
+                assert_eq!(
+                    resolve_pda(&seeds[..count], &[], &program_id, |_| None).unwrap(),
+                    Pubkey::find_program_address(&raw_seeds[..count], &program_id).0,
+                    "seed count {count}, length offset {offset}",
+                );
+            }
         }
     }
 
@@ -385,8 +355,6 @@ mod tests {
                 length: data.len() as u8,
             }],
         ];
-        assert_eq!(derive_pda(&[key.as_ref(); MAX_SEEDS], &program_id), None);
-        assert_eq!(derive_pda(&[&data], &program_id), None);
         for seeds in oversized {
             let meta = ExtraAccountMeta::new_with_seeds(seeds, false, false).unwrap();
             let result = std::panic::catch_unwind(|| {

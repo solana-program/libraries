@@ -17,6 +17,7 @@ num_enum = "0.7"
 num-traits = "0.2"
 serde = { version = "1.0.228", optional = true, features = ["derive"] }
 solana-account-info = "3.0.0"
+solana-address = { version = "2.3.0", features = ["curve25519"] }
 solana-instruction = { version = "3.0.0", features = ["std"] }
 solana-program-error = "3.0.0"
 solana-pubkey = { version = "3.0.0", features = ["curve25519"] }
@@ -26,13 +27,9 @@ spl-list-view = { version = "0.1.1", path = "../list-view" }
 spl-type-length-value = { version = "0.9.1", path = "../type-length-value" }
 thiserror = "2.0"
 
-[target.'cfg(any(target_os = "solana", target_arch = "bpf"))'.dependencies]
-solana-sha256-hasher = "3.1.0"
-
 [dev-dependencies]
 futures = "0.3.31"
 futures-util = "0.3"
-solana-sha256-hasher = { version = "3.1.0", features = ["sha2"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 
 [lib]
@@ -40,6 +37,3 @@ crate-type = ["lib"]
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
-
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
