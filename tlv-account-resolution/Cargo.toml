@@ -17,6 +17,7 @@ num_enum = "0.7"
 num-traits = "0.2"
 serde = { version = "1.0.228", optional = true, features = ["derive"] }
 solana-account-info = "3.0.0"
+solana-address = { version = "2.3.0", features = ["curve25519"] }
 solana-instruction = { version = "3.0.0", features = ["std"] }
 solana-program-error = "3.0.0"
 solana-pubkey = { version = "3.0.0", features = ["curve25519"] }

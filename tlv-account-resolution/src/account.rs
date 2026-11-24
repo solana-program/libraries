@@ -8,6 +8,7 @@ use {
     crate::{error::AccountResolutionError, pubkey_data::PubkeyData, seeds::Seed},
     bytemuck::{Pod, Zeroable},
     solana_account_info::AccountInfo,
+    solana_address::{Address, MAX_SEEDS, MAX_SEED_LEN},
     solana_instruction::AccountMeta,
     solana_program_error::ProgramError,
     solana_pubkey::{Pubkey, PUBKEY_BYTES},
@@ -62,6 +63,14 @@ where
                 }
                 pda_seeds.push(&account_data[arg_start..arg_end]);
             }
+        }
+    }
+    if pda_seeds.len() < MAX_SEEDS && pda_seeds.iter().all(|seed| seed.len() <= MAX_SEED_LEN) {
+        // Empty seeds add no bytes to the hash input.
+        let mut padded: [&[u8]; MAX_SEEDS - 1] = [&[]; MAX_SEEDS - 1];
+        padded[..pda_seeds.len()].copy_from_slice(&pda_seeds);
+        if let Some((address, _)) = Address::derive_program_address(&padded, program_id) {
+            return Ok(address);
         }
     }
     Ok(Pubkey::find_program_address(&pda_seeds, program_id).0)
@@ -293,5 +302,135 @@ impl TryFrom<&ExtraAccountMeta> for AccountMeta {
         } else {
             Err(AccountResolutionError::AccountTypeNotAccountMeta.into())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn canonical_pda_matches_sdk() {
+        let program_id = Pubkey::new_unique();
+        let bytes = [42; MAX_SEED_LEN];
+        let lengths = [0, MAX_SEED_LEN, 1, MAX_SEED_LEN / 2];
+        for offset in 0..lengths.len() {
+            let raw_seeds: Vec<&[u8]> = lengths
+                .iter()
+                .cycle()
+                .skip(offset)
+                .take(MAX_SEEDS - 1)
+                .map(|&len| &bytes[..len])
+                .collect();
+            let seeds: Vec<Seed> = raw_seeds
+                .iter()
+                .map(|seed| Seed::Literal {
+                    bytes: seed.to_vec(),
+                })
+                .collect();
+            for count in 0..MAX_SEEDS {
+                assert_eq!(
+                    resolve_pda(&seeds[..count], &[], &program_id, |_| None).unwrap(),
+                    Pubkey::find_program_address(&raw_seeds[..count], &program_id).0,
+                    "seed count {count}, length offset {offset}",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn out_of_range_seeds_use_the_sdk_path() {
+        let program_id = Pubkey::new_unique();
+        let key = Pubkey::new_unique();
+        let data = [0; MAX_SEED_LEN + 1];
+        let oversized: &[&[Seed]] = &[
+            &[const { Seed::AccountKey { index: 0 } }; MAX_SEEDS],
+            &[Seed::InstructionData {
+                index: 0,
+                length: data.len() as u8,
+            }],
+            &[Seed::AccountData {
+                account_index: 0,
+                data_index: 0,
+                length: data.len() as u8,
+            }],
+        ];
+        for seeds in oversized {
+            let meta = ExtraAccountMeta::new_with_seeds(seeds, false, false).unwrap();
+            let result = std::panic::catch_unwind(|| {
+                meta.resolve(&data, &program_id, |_| Some((&key, Some(&data))))
+            });
+            assert!(result.is_err(), "seeds: {seeds:?}");
+        }
+    }
+
+    #[test]
+    fn pda_seed_errors_are_preserved() {
+        let program_id = Pubkey::new_unique();
+        let key = Pubkey::new_unique();
+        let data = [42];
+        let resolve = |index| match index {
+            0 => Some((&key, Some(data.as_slice()))),
+            1 => Some((&key, None)),
+            _ => None,
+        };
+        let cases = [
+            (
+                Seed::InstructionData {
+                    index: 1,
+                    length: 1,
+                },
+                AccountResolutionError::InstructionDataTooSmall,
+            ),
+            (
+                Seed::AccountKey { index: 2 },
+                AccountResolutionError::AccountNotFound,
+            ),
+            (
+                Seed::AccountData {
+                    account_index: 2,
+                    data_index: 0,
+                    length: 1,
+                },
+                AccountResolutionError::AccountNotFound,
+            ),
+            (
+                Seed::AccountData {
+                    account_index: 1,
+                    data_index: 0,
+                    length: 1,
+                },
+                AccountResolutionError::AccountDataNotFound,
+            ),
+            (
+                Seed::AccountData {
+                    account_index: 0,
+                    data_index: 1,
+                    length: 1,
+                },
+                AccountResolutionError::AccountDataTooSmall,
+            ),
+        ];
+        for (seed, error) in cases {
+            let meta = ExtraAccountMeta::new_with_seeds(&[seed], false, false).unwrap();
+            assert_eq!(meta.resolve(&data, &program_id, resolve), Err(error.into()));
+        }
+
+        let mut meta = ExtraAccountMeta::new_external_pda_with_seeds(2, &[], false, false).unwrap();
+        assert_eq!(
+            meta.resolve(&data, &program_id, resolve),
+            Err(AccountResolutionError::AccountNotFound.into())
+        );
+        meta.discriminator = 1;
+        meta.address_config[0] = u8::MAX;
+        assert_eq!(
+            meta.resolve(&data, &program_id, resolve),
+            Err(ProgramError::InvalidAccountData)
+        );
+        meta.address_config = [1; 32];
+        assert_eq!(
+            meta.resolve(&data, &program_id, resolve),
+            Err(AccountResolutionError::InvalidBytesForSeed.into())
+        );
     }
 }
